@@ -1,0 +1,2699 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32-C6 Room Controller Dashboard</title>
+    <link rel="icon" type="image/webp" href="/techpanda.webp?v=9.6">
+    <link rel="shortcut icon" href="/techpanda.webp?v=9.6">
+    <link rel="stylesheet" href="/style.css?v=10.4">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <!-- Top Header Navigation Bar (Cyber Glass Design) -->
+        <header class="header">
+            <div class="header-brand">
+                <div class="header-brand-info">
+                    <div class="header-brand-logo">
+                        <img src="/techpanda.webp" alt="Tech Panda" class="brand-logo-img">
+                    </div>
+                    <div class="brand-text">
+                        <h1>Room Controller</h1>
+                        <span class="device-tag">TechPanda</span>
+                    </div>
+                </div>
+                <button class="header-settings-btn" id="btnOpenSettings" onclick="openSettings()" title="Settings">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="header-right">
+                <div class="header-status-pill connected" id="wsStatusBadge">
+                    <span class="pulse-dot"></span>
+                    <span id="wsStatusText">Connected</span>
+                </div>
+                <div class="header-ha-badge" id="headerHaBadge" style="display: none;"
+                    onclick="openSettings(); switchSettingsTab('mqtt');" title="Home Assistant Integration">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L1 12h3v9h6v-6h4v6h6v-9h3L12 2m0 2.8l6 5.4v7.8h-2v-6H8v6H6v-7.8l6-5.4Z" />
+                    </svg>
+                </div>
+                <div class="header-metric header-metric-uptime">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    <span id="statUptime">Up: 0s</span>
+                </div>
+                <div class="header-v-divider"></div>
+                <div class="header-metric header-metric-wifi">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" />
+                    </svg>
+                    <span id="statRssi">WiFi: -- dBm</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 6-Channel Switchable Relays Section (Cyber Card) -->
+        <section class="section" id="secRelays">
+            <div class="relays-section-card">
+                <div class="relays-section-header">
+                    <h2>6-Channel Switchable Relays</h2>
+                    <div class="relay-actions">
+                        <button class="btn-all-on" onclick="setAllRelays(true)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+                                <line x1="12" y1="2" x2="12" y2="12" />
+                            </svg>
+                            <span>All ON</span>
+                        </button>
+                        <button class="btn-all-off" onclick="setAllRelays(false)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+                                <line x1="12" y1="2" x2="12" y2="12" />
+                            </svg>
+                            <span>All OFF</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 6-Channel Relays Grid (3 columns x 2 rows) -->
+                <div id="relaysContainer" class="relays-container-grid"></div>
+            </div>
+        </section>
+
+        <!-- Dual AC Fan Speed Controllers (Triac + Relay Interlock) -->
+        <section class="section" id="secFans">
+            <div class="fan-section-title-row">
+                <div class="fan-section-title-wrap">
+                    <div class="fan-title-icon-badge">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="1.8">
+                            <circle cx="12" cy="12" r="2" fill="#38bdf8" />
+                            <path d="M12 12c-2-2.5-4-3-6-2.5s-3 3-1.5 5 4.5 2 6.5-.5z" fill="#38bdf8"
+                                fill-opacity="0.85" />
+                            <path d="M12 12c2.5-2 3-4 2.5-6s-3-3-5-1.5-2 4.5.5 6.5z" fill="#38bdf8"
+                                fill-opacity="0.85" />
+                            <path d="M12 12c2 2.5 4 3 6 2.5s3-3 1.5-5-4.5-2-6.5.5z" fill="#38bdf8"
+                                fill-opacity="0.85" />
+                            <path d="M12 12c-2.5 2-3 4-2.5 6s3 3 5 1.5 2-4.5-.5-6.5z" fill="#38bdf8"
+                                fill-opacity="0.85" />
+                        </svg>
+                    </div>
+                    <h2>Dual Fan Controllers</h2>
+                </div>
+                <div class="fan-section-chip">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 12h3l2-6 4 12 4-12 2 6h5" />
+                    </svg>
+                    <span>Zero-Cross Phase Cut & Relay Interlock</span>
+                </div>
+            </div>
+
+            <div class="dimmer-grid">
+                <!-- Fan 1 -->
+                <div class="fan-controller-card" id="dimmerCard1">
+                    <div class="fan-card-header">
+                        <div class="fan-header-left">
+                            <div class="fan-card-icon">
+                                <svg class="fan-spin-target" id="fanBladeIcon1" width="24" height="24"
+                                    viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="1.8">
+                                    <circle cx="12" cy="12" r="2" fill="#38bdf8" />
+                                    <path d="M12 12c-2-2.5-4-3-6-2.5s-3 3-1.5 5 4.5 2 6.5-.5z" fill="#38bdf8"
+                                        fill-opacity="0.8" />
+                                    <path d="M12 12c2.5-2 3-4 2.5-6s-3-3-5-1.5-2 4.5.5 6.5z" fill="#38bdf8"
+                                        fill-opacity="0.8" />
+                                    <path d="M12 12c2 2.5 4 3 6 2.5s3-3 1.5-5-4.5-2-6.5.5z" fill="#38bdf8"
+                                        fill-opacity="0.8" />
+                                    <path d="M12 12c-2.5 2-3 4-2.5 6s3 3 5 1.5 2-4.5-.5-6.5z" fill="#38bdf8"
+                                        fill-opacity="0.8" />
+                                </svg>
+                            </div>
+                            <div class="fan-card-text">
+                                <div class="fan-card-title-row">
+                                    <h3 id="fanTitle1">Fan 1</h3>
+                                    <span class="auto-mode-badge" id="autoBadgeFan1" style="display:none;">AUTO</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="fan-power-btn" id="dimmerToggle1" onclick="toggleDimmer(1)" title="Toggle Power">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+                                <line x1="12" y1="2" x2="12" y2="12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Speedometer Arc Gauge -->
+                    <div class="fan-gauge-container">
+                        <div class="fan-gauge-wrapper" id="rotaryWrapper1">
+                            <svg class="fan-gauge-svg" viewBox="0 0 220 180" id="rotarySvg1">
+                                <defs>
+                                    <linearGradient id="fanNeonGrad1" x1="0%" y1="100%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#0066ff" />
+                                        <stop offset="50%" stop-color="#00bfff" />
+                                        <stop offset="100%" stop-color="#38bdf8" />
+                                    </linearGradient>
+                                    <filter id="fanGlowFilter1" x="-20%" y="-20%" width="140%" height="140%">
+                                        <feGaussianBlur stdDeviation="4" result="blur" />
+                                        <feMerge>
+                                            <feMergeNode in="blur" />
+                                            <feMergeNode in="SourceGraphic" />
+                                        </feMerge>
+                                    </filter>
+                                </defs>
+
+                                <!-- Radial Tachometer Ticks (Concentric to Slider Circle) -->
+                                <g class="fan-gauge-ticks">
+                                    <line x1="58.0" y1="140.0" x2="50.2" y2="144.5" stroke="rgba(255,255,255,0.45)"
+                                        stroke-width="1.8" stroke-linecap="round" />
+                                    <line x1="50.1" y1="129.5" x2="45.3" y2="131.0" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="47.3" y1="116.6" x2="42.4" y2="117.1" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="47.3" y1="103.4" x2="42.4" y2="102.9" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="50.1" y1="90.5" x2="45.3" y2="89.0" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="58.0" y1="80.0" x2="50.2" y2="75.5" stroke="rgba(255,255,255,0.45)"
+                                        stroke-width="1.8" stroke-linecap="round" />
+                                    <line x1="63.2" y1="67.8" x2="59.5" y2="64.5" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="73.0" y1="59.0" x2="70.0" y2="55.0" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="84.4" y1="52.4" x2="82.3" y2="47.9" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="96.9" y1="48.4" x2="95.9" y2="43.5" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="110.0" y1="50.0" x2="110.0" y2="41.0" stroke="rgba(0,212,255,0.65)"
+                                        stroke-width="2.0" stroke-linecap="round" />
+                                    <line x1="123.1" y1="48.4" x2="124.1" y2="43.5" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="135.6" y1="52.4" x2="137.7" y2="47.9" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="147.0" y1="59.0" x2="150.0" y2="55.0" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="156.8" y1="67.8" x2="160.5" y2="64.5" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="162.0" y1="80.0" x2="169.8" y2="75.5" stroke="rgba(255,255,255,0.45)"
+                                        stroke-width="1.8" stroke-linecap="round" />
+                                    <line x1="169.9" y1="90.5" x2="174.7" y2="89.0" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="172.7" y1="103.4" x2="177.6" y2="102.9" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="172.7" y1="116.6" x2="177.6" y2="117.1" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="169.9" y1="129.5" x2="174.7" y2="131.0" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="162.0" y1="140.0" x2="169.8" y2="144.5" stroke="rgba(255,255,255,0.45)"
+                                        stroke-width="1.8" stroke-linecap="round" />
+                                </g>
+
+                                <!-- Background Inactive Arc Track -->
+                                <path class="fan-track-bg" d="M 40.72 150 A 80 80 0 1 1 179.28 150" fill="none"
+                                    stroke="rgba(18, 26, 46, 0.85)" stroke-width="14" stroke-linecap="round" />
+
+                                <!-- Active Radiant Neon Arc Track -->
+                                <path class="fan-track-active" id="rotaryTrack1" pathLength="100"
+                                    d="M 40.72 150 A 80 80 0 1 1 179.28 150" fill="none" stroke="url(#fanNeonGrad1)"
+                                    stroke-width="14" stroke-linecap="round" stroke-dasharray="100"
+                                    stroke-dashoffset="50" filter="url(#fanGlowFilter1)" />
+
+                                <!-- Glowing Knob Orb Dot -->
+                                <circle class="fan-knob-orb" id="rotaryDot1" cx="110" cy="30" r="9" />
+                            </svg>
+
+                            <!-- Center Speed Display & Rotating Icon -->
+                            <div class="fan-center-info">
+                                <div class="fan-center-icon-wrap" id="fanCenterIcon1">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                        stroke-width="1.8">
+                                        <circle cx="12" cy="12" r="2" fill="#38bdf8" />
+                                        <path d="M12 12c-2-2.5-4-3-6-2.5s-3 3-1.5 5 4.5 2 6.5-.5z" fill="#38bdf8"
+                                            fill-opacity="0.8" />
+                                        <path d="M12 12c2.5-2 3-4 2.5-6s-3-3-5-1.5-2 4.5.5 6.5z" fill="#38bdf8"
+                                            fill-opacity="0.8" />
+                                        <path d="M12 12c2 2.5 4 3 6 2.5s3-3 1.5-5-4.5-2-6.5.5z" fill="#38bdf8"
+                                            fill-opacity="0.8" />
+                                        <path d="M12 12c-2.5 2-3 4-2.5 6s3 3 5 1.5 2-4.5-.5-6.5z" fill="#38bdf8"
+                                            fill-opacity="0.8" />
+                                    </svg>
+                                </div>
+                                <div class="fan-center-reading">
+                                    <span class="fan-center-val" id="dimmerVal1">50</span><span
+                                        class="fan-center-pct">%</span>
+                                </div>
+                                <div class="fan-status-pill" id="fanStatusPill1">OFF</div>
+                            </div>
+                        </div>
+
+                        <!-- 5 Quick Presets Pill Bar -->
+                        <div class="fan-presets-bar">
+                            <button class="fan-preset-btn active" id="fanPreset1_0"
+                                onclick="setFanPreset(1, 0)">OFF</button>
+                            <button class="fan-preset-btn" id="fanPreset1_25" onclick="setFanPreset(1, 25)">25%</button>
+                            <button class="fan-preset-btn" id="fanPreset1_50" onclick="setFanPreset(1, 50)">50%</button>
+                            <button class="fan-preset-btn" id="fanPreset1_75" onclick="setFanPreset(1, 75)">75%</button>
+                            <button class="fan-preset-btn" id="fanPreset1_100"
+                                onclick="setFanPreset(1, 100)">MAX</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fan 2 -->
+                <div class="fan-controller-card" id="dimmerCard2">
+                    <div class="fan-card-header">
+                        <div class="fan-header-left">
+                            <div class="fan-card-icon">
+                                <svg class="fan-spin-target" id="fanBladeIcon2" width="24" height="24"
+                                    viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="1.8">
+                                    <circle cx="12" cy="12" r="2" fill="#38bdf8" />
+                                    <path d="M12 12c-2-2.5-4-3-6-2.5s-3 3-1.5 5 4.5 2 6.5-.5z" fill="#38bdf8"
+                                        fill-opacity="0.8" />
+                                    <path d="M12 12c2.5-2 3-4 2.5-6s-3-3-5-1.5-2 4.5.5 6.5z" fill="#38bdf8"
+                                        fill-opacity="0.8" />
+                                    <path d="M12 12c2 2.5 4 3 6 2.5s3-3 1.5-5-4.5-2-6.5.5z" fill="#38bdf8"
+                                        fill-opacity="0.8" />
+                                    <path d="M12 12c-2.5 2-3 4-2.5 6s3 3 5 1.5 2-4.5-.5-6.5z" fill="#38bdf8"
+                                        fill-opacity="0.8" />
+                                </svg>
+                            </div>
+                            <div class="fan-card-text">
+                                <div class="fan-card-title-row">
+                                    <h3 id="fanTitle2">Fan 2</h3>
+                                    <span class="auto-mode-badge" id="autoBadgeFan2" style="display:none;">AUTO</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="fan-power-btn" id="dimmerToggle2" onclick="toggleDimmer(2)" title="Toggle Power">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+                                <line x1="12" y1="2" x2="12" y2="12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Speedometer Arc Gauge -->
+                    <div class="fan-gauge-container">
+                        <div class="fan-gauge-wrapper" id="rotaryWrapper2">
+                            <svg class="fan-gauge-svg" viewBox="0 0 220 180" id="rotarySvg2">
+                                <defs>
+                                    <linearGradient id="fanNeonGrad2" x1="0%" y1="100%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#0066ff" />
+                                        <stop offset="50%" stop-color="#00bfff" />
+                                        <stop offset="100%" stop-color="#38bdf8" />
+                                    </linearGradient>
+                                    <filter id="fanGlowFilter2" x="-20%" y="-20%" width="140%" height="140%">
+                                        <feGaussianBlur stdDeviation="4" result="blur" />
+                                        <feMerge>
+                                            <feMergeNode in="blur" />
+                                            <feMergeNode in="SourceGraphic" />
+                                        </feMerge>
+                                    </filter>
+                                </defs>
+
+                                <!-- Radial Tachometer Ticks (Concentric to Slider Circle) -->
+                                <g class="fan-gauge-ticks">
+                                    <line x1="58.0" y1="140.0" x2="50.2" y2="144.5" stroke="rgba(255,255,255,0.45)"
+                                        stroke-width="1.8" stroke-linecap="round" />
+                                    <line x1="50.1" y1="129.5" x2="45.3" y2="131.0" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="47.3" y1="116.6" x2="42.4" y2="117.1" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="47.3" y1="103.4" x2="42.4" y2="102.9" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="50.1" y1="90.5" x2="45.3" y2="89.0" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="58.0" y1="80.0" x2="50.2" y2="75.5" stroke="rgba(255,255,255,0.45)"
+                                        stroke-width="1.8" stroke-linecap="round" />
+                                    <line x1="63.2" y1="67.8" x2="59.5" y2="64.5" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="73.0" y1="59.0" x2="70.0" y2="55.0" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="84.4" y1="52.4" x2="82.3" y2="47.9" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="96.9" y1="48.4" x2="95.9" y2="43.5" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="110.0" y1="50.0" x2="110.0" y2="41.0" stroke="rgba(0,212,255,0.65)"
+                                        stroke-width="2.0" stroke-linecap="round" />
+                                    <line x1="123.1" y1="48.4" x2="124.1" y2="43.5" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="135.6" y1="52.4" x2="137.7" y2="47.9" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="147.0" y1="59.0" x2="150.0" y2="55.0" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="156.8" y1="67.8" x2="160.5" y2="64.5" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="162.0" y1="80.0" x2="169.8" y2="75.5" stroke="rgba(255,255,255,0.45)"
+                                        stroke-width="1.8" stroke-linecap="round" />
+                                    <line x1="169.9" y1="90.5" x2="174.7" y2="89.0" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="172.7" y1="103.4" x2="177.6" y2="102.9" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="172.7" y1="116.6" x2="177.6" y2="117.1" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="169.9" y1="129.5" x2="174.7" y2="131.0" stroke="rgba(255,255,255,0.22)"
+                                        stroke-width="1.2" stroke-linecap="round" />
+                                    <line x1="162.0" y1="140.0" x2="169.8" y2="144.5" stroke="rgba(255,255,255,0.45)"
+                                        stroke-width="1.8" stroke-linecap="round" />
+                                </g>
+
+                                <!-- Background Inactive Arc Track -->
+                                <path class="fan-track-bg" d="M 40.72 150 A 80 80 0 1 1 179.28 150" fill="none"
+                                    stroke="rgba(18, 26, 46, 0.85)" stroke-width="14" stroke-linecap="round" />
+
+                                <!-- Active Radiant Neon Arc Track -->
+                                <path class="fan-track-active" id="rotaryTrack2" pathLength="100"
+                                    d="M 40.72 150 A 80 80 0 1 1 179.28 150" fill="none" stroke="url(#fanNeonGrad2)"
+                                    stroke-width="14" stroke-linecap="round" stroke-dasharray="100"
+                                    stroke-dashoffset="50" filter="url(#fanGlowFilter2)" />
+
+                                <!-- Glowing Knob Orb Dot -->
+                                <circle class="fan-knob-orb" id="rotaryDot2" cx="110" cy="30" r="9" />
+                            </svg>
+
+                            <!-- Center Speed Display & Rotating Icon -->
+                            <div class="fan-center-info">
+                                <div class="fan-center-icon-wrap" id="fanCenterIcon2">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                        stroke-width="1.8">
+                                        <circle cx="12" cy="12" r="2" fill="#38bdf8" />
+                                        <path d="M12 12c-2-2.5-4-3-6-2.5s-3 3-1.5 5 4.5 2 6.5-.5z" fill="#38bdf8"
+                                            fill-opacity="0.8" />
+                                        <path d="M12 12c2.5-2 3-4 2.5-6s-3-3-5-1.5-2 4.5.5 6.5z" fill="#38bdf8"
+                                            fill-opacity="0.8" />
+                                        <path d="M12 12c2 2.5 4 3 6 2.5s3-3 1.5-5-4.5-2-6.5.5z" fill="#38bdf8"
+                                            fill-opacity="0.8" />
+                                        <path d="M12 12c-2.5 2-3 4-2.5 6s3 3 5 1.5 2-4.5-.5-6.5z" fill="#38bdf8"
+                                            fill-opacity="0.8" />
+                                    </svg>
+                                </div>
+                                <div class="fan-center-reading">
+                                    <span class="fan-center-val" id="dimmerVal2">50</span><span
+                                        class="fan-center-pct">%</span>
+                                </div>
+                                <div class="fan-status-pill" id="fanStatusPill2">OFF</div>
+                            </div>
+                        </div>
+
+                        <!-- 5 Quick Presets Pill Bar -->
+                        <div class="fan-presets-bar">
+                            <button class="fan-preset-btn active" id="fanPreset2_0"
+                                onclick="setFanPreset(2, 0)">OFF</button>
+                            <button class="fan-preset-btn" id="fanPreset2_25" onclick="setFanPreset(2, 25)">25%</button>
+                            <button class="fan-preset-btn" id="fanPreset2_50" onclick="setFanPreset(2, 50)">50%</button>
+                            <button class="fan-preset-btn" id="fanPreset2_75" onclick="setFanPreset(2, 75)">75%</button>
+                            <button class="fan-preset-btn" id="fanPreset2_100"
+                                onclick="setFanPreset(2, 100)">MAX</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Environmental & Presence Sensors Section (STCC4 & C4002) -->
+        <section class="section" id="secEnv">
+            <div class="section-title-row">
+                <h2>Environmental & Presence Intelligence</h2>
+                <div class="badge-group">
+                    <span class="chip chip-emerald">STCC4 CO₂ (I2C 0x64)</span>
+                    <span class="chip chip-cyan">C4002 mmWave Radar (UART0)</span>
+                </div>
+            </div>
+
+            <div class="ac-power-grid">
+                <!-- CO2 Concentration -->
+                <div class="cyber-stat-card theme-green" id="cardCo2">
+                    <div class="hex-badge">
+                        <svg class="hex-frame" width="56" height="56" viewBox="0 0 64 64">
+                            <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                stroke-width="1.5" stroke-opacity="0.3" />
+                            <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.03)"
+                                stroke="currentColor" stroke-width="2" />
+                        </svg>
+                        <div class="hex-icon-inner">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="cyber-stat-content">
+                        <span class="cyber-stat-label">Carbon Dioxide (CO₂)</span>
+                        <div class="cyber-stat-val-row">
+                            <span class="cyber-stat-val" id="valCo2">420</span>
+                            <span class="cyber-stat-unit">PPM</span>
+                        </div>
+                        <span class="cyber-stat-sub" id="valAirQuality">Air Quality: Excellent</span>
+                    </div>
+                </div>
+
+                <!-- Climate: Temperature & Humidity -->
+                <div class="cyber-stat-card theme-blue">
+                    <div class="hex-badge">
+                        <svg class="hex-frame" width="56" height="56" viewBox="0 0 64 64">
+                            <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                stroke-width="1.5" stroke-opacity="0.3" />
+                            <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.03)"
+                                stroke="currentColor" stroke-width="2" />
+                        </svg>
+                        <div class="hex-icon-inner">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="cyber-stat-content">
+                        <span class="cyber-stat-label">Room Climate</span>
+                        <div class="cyber-stat-val-row">
+                            <span class="cyber-stat-val" id="valTemp">24.5</span>
+                            <span class="cyber-stat-unit">°C</span>
+                        </div>
+                        <span class="cyber-stat-sub" id="valHumidity">Humidity: 48.0% RH</span>
+                    </div>
+                </div>
+
+                <!-- mmWave Radar Presence -->
+                <div class="cyber-stat-card theme-amber" id="cardPresence">
+                    <div class="hex-badge">
+                        <svg class="hex-frame" width="56" height="56" viewBox="0 0 64 64">
+                            <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                stroke-width="1.5" stroke-opacity="0.3" />
+                            <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.03)"
+                                stroke="currentColor" stroke-width="2" />
+                        </svg>
+                        <div class="hex-icon-inner">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M2 12h2a8 8 0 0 1 8-8v-2M12 18v2a8 8 0 0 0 8-8h2M6 12a6 6 0 0 1 6-6M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="cyber-stat-content">
+                        <span class="cyber-stat-label">Human Presence</span>
+                        <div class="cyber-stat-val-row">
+                            <span class="cyber-stat-val" style="font-size: 16px;" id="valPresenceState">No Target</span>
+                        </div>
+                        <span class="cyber-stat-sub" id="valPresenceDist">Distance: -- m</span>
+                    </div>
+                </div>
+
+                <!-- Breathing Detection (Micro-Motion) -->
+                <div class="cyber-stat-card theme-purple" id="cardBreathing">
+                    <div class="hex-badge">
+                        <svg class="hex-frame" width="56" height="56" viewBox="0 0 64 64">
+                            <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                stroke-width="1.5" stroke-opacity="0.3" />
+                            <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.03)"
+                                stroke="currentColor" stroke-width="2" />
+                        </svg>
+                        <div class="hex-icon-inner">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 12h3l2-4 3 8 3-6 2 4h4" />
+                                <path d="M12 3a9 9 0 0 0-9 9" />
+                                <path d="M12 21a9 9 0 0 0 9-9" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="cyber-stat-content">
+                        <span class="cyber-stat-label">Breathing Detection</span>
+                        <div class="cyber-stat-val-row">
+                            <span class="cyber-stat-val" style="font-size: 16px;" id="valBreathing">No Target</span>
+                        </div>
+                        <span class="cyber-stat-sub" id="valBreathingDetail">Micro-Motion: Idle</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AC Power & Energy Monitor (Unified Cyber Card) -->
+        <section class="section" id="secPower">
+            <div class="ac-power-monitor-card">
+                <!-- Header -->
+                <div class="ac-power-header">
+                    <div class="ac-power-title">AC Power & Energy Monitor</div>
+                    <div class="ac-power-chip" id="acPowerChip">ACS37800 Online</div>
+                </div>
+
+                <!-- Row 1: Instantaneous Telemetry (4 Columns) -->
+                <div class="ac-power-grid">
+                    <!-- Mains Voltage (Blue Theme) -->
+                    <div class="cyber-stat-card theme-blue">
+                        <div class="hex-badge">
+                            <svg class="hex-frame" width="56" height="56" viewBox="0 0 64 64">
+                                <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-opacity="0.3" />
+                                <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.03)"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <div class="hex-icon-inner">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 22v-5" />
+                                    <path d="M9 8V2" />
+                                    <path d="M15 8V2" />
+                                    <path d="M18 8v5a6 6 0 0 1-12 0V8z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="cyber-stat-content">
+                            <span class="cyber-stat-label">Mains Voltage</span>
+                            <div class="cyber-stat-val-row">
+                                <span class="cyber-stat-val" id="valVoltage">--</span>
+                                <span class="cyber-stat-unit">V RMS</span>
+                            </div>
+                            <span class="cyber-stat-sub" id="valFreq">AC Input Not Detected</span>
+                        </div>
+                    </div>
+
+                    <!-- Load Current (Amber Theme) -->
+                    <div class="cyber-stat-card theme-amber">
+                        <div class="hex-badge">
+                            <svg class="hex-frame" width="56" height="56" viewBox="0 0 64 64">
+                                <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-opacity="0.3" />
+                                <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.03)"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <div class="hex-icon-inner">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M12 16V8" />
+                                    <path d="m8 12 4-4 4 4" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="cyber-stat-content">
+                            <span class="cyber-stat-label">Load Current</span>
+                            <div class="cyber-stat-val-row">
+                                <span class="cyber-stat-val" id="valCurrent">--</span>
+                                <span class="cyber-stat-unit">A RMS</span>
+                            </div>
+                            <span class="cyber-stat-sub" id="valCurrentSub">AC Input Idle</span>
+                        </div>
+                    </div>
+
+                    <!-- Active Power (Green Theme) -->
+                    <div class="cyber-stat-card theme-green">
+                        <div class="hex-badge">
+                            <svg class="hex-frame" width="56" height="56" viewBox="0 0 64 64">
+                                <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-opacity="0.3" />
+                                <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.03)"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <div class="hex-icon-inner">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="cyber-stat-content">
+                            <span class="cyber-stat-label">Active Power</span>
+                            <div class="cyber-stat-val-row">
+                                <span class="cyber-stat-val" id="valPower">0.0</span>
+                                <span class="cyber-stat-unit">W</span>
+                            </div>
+                            <span class="cyber-stat-sub" id="valApparent">0. VA Apparent</span>
+                        </div>
+                    </div>
+
+                    <!-- Power Factor (Purple Theme) -->
+                    <div class="cyber-stat-card theme-purple">
+                        <div class="hex-badge">
+                            <svg class="hex-frame" width="56" height="56" viewBox="0 0 64 64">
+                                <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-opacity="0.3" />
+                                <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.03)"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <div class="hex-icon-inner">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+                                    <line x1="12" y1="2" x2="12" y2="12" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="cyber-stat-content">
+                            <span class="cyber-stat-label">Power Factor</span>
+                            <div class="cyber-stat-val-row">
+                                <span class="cyber-stat-val" id="valPf">0.00</span>
+                                <span class="cyber-stat-unit">PF</span>
+                            </div>
+                            <span class="cyber-stat-sub" id="sensorStatus">Sensor Online</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Glowing Multi-Colored Neon Divider Lightbar -->
+                <div class="neon-divider-bar"></div>
+
+                <!-- Row 2: Energy & 24h Stats (4 Columns, Conditional on Power Logging) -->
+                <div class="ac-power-grid" id="rowEnergyConsumption">
+                    <!-- Daily Consumption (Green Theme) -->
+                    <div class="cyber-stat-card theme-green">
+                        <div class="hex-badge">
+                            <svg class="hex-frame" width="56" height="56" viewBox="0 0 64 64">
+                                <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-opacity="0.3" />
+                                <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.03)"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <div class="hex-icon-inner">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                                    <line x1="16" x2="16" y1="2" y2="6" />
+                                    <line x1="8" x2="8" y1="2" y2="6" />
+                                    <line x1="3" x2="21" y1="10" y2="10" />
+                                    <path d="m9 16 2 2 4-4" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="cyber-stat-content">
+                            <span class="cyber-stat-label">Daily Consumption</span>
+                            <div class="cyber-stat-val-row">
+                                <span class="cyber-stat-val" id="valDailyKwh">0.000</span>
+                                <span class="cyber-stat-unit">kWh</span>
+                            </div>
+                            <span class="cyber-stat-sub" id="valDailySub">Today's Accumulated</span>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Consumption (Blue Theme) -->
+                    <div class="cyber-stat-card theme-blue">
+                        <div class="hex-badge">
+                            <svg class="hex-frame" width="56" height="56" viewBox="0 0 64 64">
+                                <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-opacity="0.3" />
+                                <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.03)"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <div class="hex-icon-inner">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 3v18h18" />
+                                    <path d="m19 9-5 5-4-4-3 3" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="cyber-stat-content">
+                            <span class="cyber-stat-label">Monthly Consumption</span>
+                            <div class="cyber-stat-val-row">
+                                <span class="cyber-stat-val" id="valMonthlyKwh">0.000</span>
+                                <span class="cyber-stat-unit">kWh</span>
+                            </div>
+                            <span class="cyber-stat-sub" id="valMonthlySub">This Month's Total</span>
+                        </div>
+                    </div>
+
+                    <!-- Peak Demand 24H (Amber Theme) -->
+                    <div class="cyber-stat-card theme-amber">
+                        <div class="hex-badge">
+                            <svg class="hex-frame" width="56" height="56" viewBox="0 0 64 64">
+                                <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-opacity="0.3" />
+                                <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.03)"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <div class="hex-icon-inner">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="cyber-stat-content">
+                            <span class="cyber-stat-label">Peak Demand (24H)</span>
+                            <div class="cyber-stat-val-row">
+                                <span class="cyber-stat-val" id="valPeakPower">0.2</span>
+                                <span class="cyber-stat-unit">W</span>
+                            </div>
+                            <span class="cyber-stat-sub">Highest Recorded Load</span>
+                        </div>
+                    </div>
+
+                    <!-- Average Load 24H (Purple Theme) -->
+                    <div class="cyber-stat-card theme-purple">
+                        <div class="hex-badge">
+                            <svg class="hex-frame" width="56" height="56" viewBox="0 0 64 64">
+                                <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-opacity="0.3" />
+                                <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.03)"
+                                    stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <div class="hex-icon-inner">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <polyline points="12 6 12 12 16 14" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="cyber-stat-content">
+                            <span class="cyber-stat-label">Average Load (24H)</span>
+                            <div class="cyber-stat-val-row">
+                                <span class="cyber-stat-val" id="valAvgPower">0.0</span>
+                                <span class="cyber-stat-unit">W</span>
+                            </div>
+                            <span class="cyber-stat-sub">Continuous Mean Load</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Sculpted Notch: "History Chart" Sparkline Tab -->
+                <div class="history-tab-bar" id="historyTabBar">
+                    <button class="history-toggle-btn" id="btnToggleHistoryChart" onclick="toggleHistoryChart()"
+                        title="Click to view 24h consumption profile">
+                        <span>History Chart</span>
+                        <svg class="sparkline-svg" viewBox="0 0 60 20" fill="none">
+                            <path d="M2 14 L10 12 L18 16 L26 6 L34 10 L42 4 L50 12 L58 8" stroke="#38bdf8"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Expandable 24-Hour Interactive Chart Drawer -->
+                <div class="history-chart-drawer" id="historyChartDrawer">
+                    <div class="chart-container" id="chartContainer">
+                        <canvas id="powerChartCanvas"></canvas>
+                        <div class="chart-tooltip" id="chartTooltip" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Smart Home System • <a href="https://www.youtube.com/@TechPanda-4k" target="_blank"
+                    rel="noopener noreferrer" class="footer-link">TECH PANDA</a></p>
+        </footer>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-backdrop" id="settingsModalBackdrop" style="display: none;"
+        onclick="closeSettingsOnBackdrop(event)">
+        <div class="settings-modal" id="settingsModal" onclick="event.stopPropagation()">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <div class="hex-badge hex-modal">
+                        <svg class="hex-frame" width="44" height="44" viewBox="0 0 64 64">
+                            <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="#38bdf8"
+                                stroke-width="1.8" stroke-opacity="0.4" />
+                            <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(14, 165, 233, 0.08)"
+                                stroke="#38bdf8" stroke-width="2" />
+                        </svg>
+                        <div class="hex-icon-inner">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="3" />
+                                <path
+                                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <h2>System Settings</h2>
+                </div>
+                <button class="modal-close-btn" onclick="closeSettings()" title="Close">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Tab Navigation Buttons (5 Tabs) -->
+            <div class="modal-tabs">
+                <button class="tab-btn active" id="tabBtnAutomation" onclick="switchSettingsTab('automation')">
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                    </svg>
+                    <span>Automation</span>
+                </button>
+                <button class="tab-btn" id="tabBtnLeds" onclick="switchSettingsTab('leds')">
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5" />
+                        <line x1="12" y1="1" x2="12" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="23" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                        <line x1="1" y1="12" x2="3" y2="12" />
+                        <line x1="21" y1="12" x2="23" y2="12" />
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                    <span>Lights & Power</span>
+                </button>
+                <button class="tab-btn" id="tabBtnWifi" onclick="switchSettingsTab('wifi')">
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" />
+                    </svg>
+                    <span>Wi-Fi Network</span>
+                </button>
+                <button class="tab-btn" id="tabBtnMqtt" onclick="switchSettingsTab('mqtt')">
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    <span>Home Assistant</span>
+                </button>
+                <button class="tab-btn" id="tabBtnOta" onclick="switchSettingsTab('ota')">
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    <span>OTA Updates</span>
+                </button>
+                <button class="tab-btn" id="tabBtnSystem" onclick="switchSettingsTab('system')">
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="16" x2="12" y2="12" />
+                        <line x1="12" y1="8" x2="12.01" y2="8" />
+                    </svg>
+                    <span>System Info</span>
+                </button>
+            </div>
+
+            <!-- Tab 1: Automation Settings Content -->
+            <div class="tab-content active" id="tabContentAutomation">
+                <!-- Group 1: Presence & Inactivity Gate -->
+                <div class="settings-group-card">
+                    <div class="group-header">
+                        <div class="group-title-row">
+                            <div class="hex-badge hex-sm hex-theme-green">
+                                <svg class="hex-frame" width="38" height="38" viewBox="0 0 64 64">
+                                    <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                        stroke-width="1.8" stroke-opacity="0.4" />
+                                    <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.02)"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                <div class="hex-icon-inner">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                        <circle cx="12" cy="7" r="4" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <span class="group-title">Presence & Inactivity Gate</span>
+                        </div>
+                        <span class="chip-presets">mmWave Dependency</span>
+                    </div>
+
+                    <p class="rename-section-desc">All automation actions require human presence. When unoccupied, loads
+                        automatically turn off after the inactivity timeout.</p>
+
+                    <div class="rule-row">
+                        <div class="rule-row-left">
+                            <div class="rule-row-text">
+                                <span class="rule-title">Master Automation Engine</span>
+                                <span class="rule-desc">Global supervisor for automated fans, relays, and climate
+                                    triggers</span>
+                            </div>
+                        </div>
+                        <label class="cyber-toggle-green">
+                            <input type="checkbox" id="autoMasterToggle" onchange="saveAutomationForm()">
+                            <span class="cyber-slider-green"></span>
+                        </label>
+                    </div>
+
+                    <div class="rule-row">
+                        <div class="rule-row-left">
+                            <div class="rule-row-text">
+                                <span class="rule-title">Presence Inactivity Timeout</span>
+                                <span class="rule-desc">Time to wait after room is empty before turning off automated
+                                    loads</span>
+                            </div>
+                        </div>
+                        <div class="select-wrapper">
+                            <select id="autoOffDelaySelect" class="styled-select" onchange="saveAutomationForm()">
+                                <option value="30">30 Seconds (Test)</option>
+                                <option value="60">1 Minute</option>
+                                <option value="120" selected>2 Minutes (Default)</option>
+                                <option value="300">5 Minutes</option>
+                                <option value="600">10 Minutes</option>
+                                <option value="1800">30 Minutes</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="auto-status-bar">
+                        <span class="auto-status-indicator" id="livePresenceIndicator">
+                            <span class="status-dot"></span>
+                            <span id="livePresenceText">Presence: Detecting...</span>
+                        </span>
+                        <span class="auto-countdown-tag" id="liveCountdownTag">Inactivity: Active</span>
+                    </div>
+                </div>
+
+                <!-- Group 2: Ceiling Fan (Fan 1) Automation -->
+                <div class="settings-group-card">
+                    <div class="group-header">
+                        <div class="group-title-row">
+                            <div class="hex-badge hex-sm hex-theme-blue">
+                                <svg class="hex-frame" width="38" height="38" viewBox="0 0 64 64">
+                                    <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                        stroke-width="1.8" stroke-opacity="0.4" />
+                                    <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.02)"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                <div class="hex-icon-inner">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                        stroke-width="2">
+                                        <circle cx="12" cy="12" r="2" fill="#38bdf8" />
+                                        <path d="M12 12c-2-2.5-4-3-6-2.5s-3 3-1.5 5 4.5 2 6.5-.5z" fill="#38bdf8"
+                                            fill-opacity="0.8" />
+                                        <path d="M12 12c2.5-2 3-4 2.5-6s-3-3-5-1.5-2 4.5.5 6.5z" fill="#38bdf8"
+                                            fill-opacity="0.8" />
+                                        <path d="M12 12c2 2.5 4 3 6 2.5s3-3 1.5-5-4.5-2-6.5.5z" fill="#38bdf8"
+                                            fill-opacity="0.8" />
+                                        <path d="M12 12c-2.5 2-3 4-2.5 6s3 3 5 1.5 2-4.5-.5-6.5z" fill="#38bdf8"
+                                            fill-opacity="0.8" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <span class="group-title" id="autoFan1Heading">Ceiling Fan (Fan 1) Automation</span>
+                        </div>
+                        <span class="chip-presets">Temperature Control</span>
+                    </div>
+
+                    <div class="rule-row">
+                        <div class="rule-row-left">
+                            <div class="rule-row-text">
+                                <span class="rule-title">Auto Mode Switch</span>
+                                <span class="rule-desc">When disabled, fan operates in purely manual mode</span>
+                            </div>
+                        </div>
+                        <label class="cyber-toggle-green">
+                            <input type="checkbox" id="autoFan1Toggle" onchange="saveAutomationForm()">
+                            <span class="cyber-slider-green"></span>
+                        </label>
+                    </div>
+
+                    <div class="auto-target-row">
+                        <div class="auto-target-label">
+                            <span class="rule-title">Target Room Temperature</span>
+                            <span class="rule-desc">Comfort setpoint with ±0.5°C anti-hunting hysteresis</span>
+                        </div>
+                        <div class="auto-target-stepper">
+                            <button class="btn-step" onclick="stepTargetTemp(-0.5)">-</button>
+                            <span class="target-temp-val" id="dispTargetTemp">26.0°C</span>
+                            <button class="btn-step" onclick="stepTargetTemp(0.5)">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Speed Profile Visualizer Table -->
+                    <div class="speed-rules-grid">
+                        <div class="speed-rule-pill">
+                            <span class="rule-cond">&lt; 24.0°C</span>
+                            <span class="rule-speed speed-off">OFF (0%)</span>
+                        </div>
+                        <div class="speed-rule-pill">
+                            <span class="rule-cond">24°C – 27°C</span>
+                            <span class="rule-speed speed-low">40% Speed</span>
+                        </div>
+                        <div class="speed-rule-pill">
+                            <span class="rule-cond">27°C – 30°C</span>
+                            <span class="rule-speed speed-med">70% Speed</span>
+                        </div>
+                        <div class="speed-rule-pill">
+                            <span class="rule-cond">&gt; 30.0°C</span>
+                            <span class="rule-speed speed-high">100% MAX</span>
+                        </div>
+                    </div>
+
+                    <div class="auto-live-badge" id="autoFan1DemandBadge">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path
+                                d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                        </svg>
+                        <span id="autoFan1LiveText">Status: Manual Mode</span>
+                    </div>
+                </div>
+
+                <!-- Group 3: Exhaust Fan (Fan 2) Automation -->
+                <div class="settings-group-card">
+                    <div class="group-header">
+                        <div class="group-title-row">
+                            <div class="hex-badge hex-sm hex-theme-blue">
+                                <svg class="hex-frame" width="38" height="38" viewBox="0 0 64 64">
+                                    <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                        stroke-width="1.8" stroke-opacity="0.4" />
+                                    <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.02)"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                <div class="hex-icon-inner">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                        stroke-width="2">
+                                        <circle cx="12" cy="12" r="2" fill="#38bdf8" />
+                                        <path d="M12 12c-2-2.5-4-3-6-2.5s-3 3-1.5 5 4.5 2 6.5-.5z" fill="#38bdf8"
+                                            fill-opacity="0.8" />
+                                        <path d="M12 12c2.5-2 3-4 2.5-6s-3-3-5-1.5-2 4.5.5 6.5z" fill="#38bdf8"
+                                            fill-opacity="0.8" />
+                                        <path d="M12 12c2 2.5 4 3 6 2.5s3-3 1.5-5-4.5-2-6.5.5z" fill="#38bdf8"
+                                            fill-opacity="0.8" />
+                                        <path d="M12 12c-2.5 2-3 4-2.5 6s3 3 5 1.5 2-4.5-.5-6.5z" fill="#38bdf8"
+                                            fill-opacity="0.8" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <span class="group-title" id="autoFan2Heading">Exhaust Fan (Fan 2) Automation</span>
+                        </div>
+                        <span class="chip-presets">Multi-Source</span>
+                    </div>
+
+                    <p class="rename-section-desc">Select control source. In Combined mode, the highest demand between
+                        CO₂ and temperature determines exhaust speed.</p>
+
+                    <!-- Segmented Mode Pills -->
+                    <div class="mode-segmented-bar">
+                        <button class="mode-pill active" id="btnMode_0" onclick="setExhaustMode(0)">Manual</button>
+                        <button class="mode-pill" id="btnMode_1" onclick="setExhaustMode(1)">CO₂ Based</button>
+                        <button class="mode-pill" id="btnMode_2" onclick="setExhaustMode(2)">Temperature</button>
+                        <button class="mode-pill" id="btnMode_3" onclick="setExhaustMode(3)">CO₂ + Temp</button>
+                    </div>
+
+                    <!-- Exhaust Profiles Reference Grid -->
+                    <div class="exhaust-profiles-grid">
+                        <div class="profile-col">
+                            <span class="col-header">CO₂ DEMAND PROFILE</span>
+                            <div class="profile-row"><span>&lt; 800 ppm</span><span class="speed-off">OFF (0%)</span>
+                            </div>
+                            <div class="profile-row"><span>800 – 1200</span><span class="speed-low">40%</span></div>
+                            <div class="profile-row"><span>1200 – 1800</span><span class="speed-med">70%</span></div>
+                            <div class="profile-row"><span>&gt; 1800 ppm</span><span class="speed-high">100% MAX</span>
+                            </div>
+                        </div>
+                        <div class="profile-col">
+                            <span class="col-header">TEMP DEMAND PROFILE</span>
+                            <div class="profile-row"><span>&lt; 26.0°C</span><span class="speed-off">OFF (0%)</span>
+                            </div>
+                            <div class="profile-row"><span>26°C – 30°C</span><span class="speed-med">50%</span></div>
+                            <div class="profile-row"><span>&gt; 30.0°C</span><span class="speed-high">100% MAX</span>
+                            </div>
+                            <div class="profile-row" style="color:#64748b;"><span>Combined</span><span
+                                    style="color:#38bdf8;">max(CO₂, Temp)</span></div>
+                        </div>
+                    </div>
+
+                    <div class="auto-live-badge" id="autoFan2DemandBadge">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path
+                                d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                        </svg>
+                        <span id="autoFan2LiveText">Status: Manual Mode</span>
+                    </div>
+                </div>
+
+                <!-- Group 4: Smart Scenarios -->
+                <div class="settings-group-card">
+                    <div class="group-header">
+                        <div class="group-title-row">
+                            <div class="hex-badge hex-sm hex-theme-blue">
+                                <svg class="hex-frame" width="38" height="38" viewBox="0 0 64 64">
+                                    <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                        stroke-width="1.8" stroke-opacity="0.4" />
+                                    <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.02)"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                <div class="hex-icon-inner">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <span class="group-title">Smart Scenarios</span>
+                        </div>
+                        <span class="chip-presets">Adaptive Intelligence</span>
+                    </div>
+
+                    <!-- Scenario 1: Night Quiet Mode -->
+                    <div class="scenario-card">
+                        <div class="scenario-header">
+                            <div class="scenario-title-wrap">
+                                <span class="scenario-name">Night Quiet Mode</span>
+                                <span class="scenario-sub">Limits max fan speed to 50% between 22:00 and 07:00 to
+                                    eliminate sleep noise</span>
+                            </div>
+                            <label class="cyber-toggle-green">
+                                <input type="checkbox" id="autoNightQuietToggle" onchange="saveAutomationForm()">
+                                <span class="cyber-slider-green"></span>
+                            </label>
+                        </div>
+                        <div class="scenario-chips-row">
+                            <span class="scenario-chip">Hours: 22:00 – 07:00</span>
+                            <span class="scenario-chip">Max Fan Speed: 50%</span>
+                            <span class="scenario-active-tag" id="liveNightQuietTag">Inactive</span>
+                        </div>
+                    </div>
+
+                    <!-- Scenario 2: Air Quality Boost Mode -->
+                    <div class="scenario-card" style="margin-top: 12px;">
+                        <div class="scenario-header">
+                            <div class="scenario-title-wrap">
+                                <span class="scenario-name">Air Quality Emergency Boost</span>
+                                <span class="scenario-sub">Purges room at CO₂ &gt; 1500 ppm (Exhaust 100%, Fan 40%)
+                                    until CO₂ &lt; 900 ppm</span>
+                            </div>
+                            <label class="cyber-toggle-green">
+                                <input type="checkbox" id="autoAirBoostToggle" onchange="saveAutomationForm()">
+                                <span class="cyber-slider-green"></span>
+                            </label>
+                        </div>
+                        <div class="scenario-chips-row">
+                            <span class="scenario-chip">Trigger: &gt; 1500 PPM</span>
+                            <span class="scenario-chip">Clears: &lt; 900 PPM</span>
+                            <span class="scenario-chip">Exhaust: 100% | Fan: 40%</span>
+                            <span class="scenario-active-tag" id="liveAirBoostTag">Normal</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Group 5: 6-Channel Lighting Automation (Matching Image 1) -->
+                <div class="settings-group-card lighting-group-card">
+                    <div class="group-header">
+                        <div class="group-title-row">
+                            <div class="hex-badge hex-sm hex-theme-blue">
+                                <svg class="hex-frame" width="44" height="44" viewBox="0 0 64 64">
+                                    <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="#00e5ff"
+                                        stroke-width="1.8" stroke-opacity="0.5" />
+                                    <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(0,229,255,0.03)"
+                                        stroke="#00e5ff" stroke-width="2" />
+                                </svg>
+                                <div class="hex-icon-inner">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00e5ff"
+                                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+                                        <line x1="12" y1="2" x2="12" y2="12" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="group-title-col">
+                                <span class="group-title">6-Channel Lighting Automation</span>
+                                <p class="scenario-sub">Independent automation rules for all 6 relay channels with
+                                    presence gating, night protection, and custom inactivity timeouts.</p>
+                            </div>
+                        </div>
+                        <span class="chip-presets">Per-Channel Control</span>
+                    </div>
+
+                    <!-- Quick Scenario Presets -->
+                    <div class="preset-section">
+                        <span class="presets-section-label">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="#00e5ff" stroke="#00e5ff">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                            </svg>
+                            <span>ONE-TOUCH LIGHTING &amp; ROOM PRESETS</span>
+                        </span>
+                        <div class="preset-buttons-row">
+                            <button class="btn-preset active" id="btnPreset_0" onclick="selectPreset(0)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                                </svg>
+                                <span>Normal / Auto</span>
+                            </button>
+                            <button class="btn-preset" id="btnPreset_1" onclick="selectPreset(1)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                                    <path d="M7 4v4M12 4v4M17 4v4M2 8h20" />
+                                    <polygon points="10 12 15 15 10 18" />
+                                </svg>
+                                <span>Movie Mode</span>
+                            </button>
+                            <button class="btn-preset" id="btnPreset_2" onclick="selectPreset(2)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0L19 11Z" />
+                                    <path d="m5 2 5 5" />
+                                    <path d="M2 5l5 5" />
+                                    <path d="m14 16 6 6" />
+                                </svg>
+                                <span>Cleaning Mode</span>
+                            </button>
+                            <button class="btn-preset preset-away" id="btnPreset_3" onclick="selectPreset(3)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                    <circle cx="12" cy="11" r="1" />
+                                    <circle cx="9" cy="11" r="0.5" />
+                                    <circle cx="15" cy="11" r="0.5" />
+                                </svg>
+                                <span>Away Mode</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="auto-switches-grid" id="autoSwitchesGrid">
+                        <!-- Populated dynamically via app.js -->
+                    </div>
+                </div>
+
+                <!-- Group 6: Universal Automation Safety & Protection Layer (Matching Image 2) -->
+                <div class="settings-group-card safety-group-card">
+                    <div class="group-header">
+                        <div class="group-title-row">
+                            <div class="hex-badge hex-sm hex-theme-blue">
+                                <svg class="hex-frame" width="44" height="44" viewBox="0 0 64 64">
+                                    <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="#00e5ff"
+                                        stroke-width="1.8" stroke-opacity="0.5" />
+                                    <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(0,229,255,0.03)"
+                                        stroke="#00e5ff" stroke-width="2" />
+                                </svg>
+                                <div class="hex-icon-inner">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00e5ff"
+                                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="group-title-col">
+                                <span class="group-title">Automation Safety &amp; Protection Layer</span>
+                                <p class="scenario-sub">Universal hardware protection preventing relay chatter, rapid
+                                    triac oscillation, sensor noise hunting, and fan speed jumping.</p>
+                            </div>
+                        </div>
+                        <div class="safety-guarded-pill" id="livePwrStabilizedTag">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                <path d="m9 12 2 2 4-4" />
+                            </svg>
+                            <span>Active &amp; Guarded</span>
+                        </div>
+                    </div>
+
+                    <!-- Section 1: Filtered Signals -->
+                    <div class="safety-section-block">
+                        <div class="safety-sec-header">
+                            <span class="safety-sec-badge">1</span>
+                            <span class="safety-sec-title">Filtered Signals</span>
+                        </div>
+                        <div class="safety-signals-row">
+                            <!-- Temp -->
+                            <div class="safety-signal-card">
+                                <div class="safety-icon-box">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
+                                    </svg>
+                                </div>
+                                <div class="safety-signal-content">
+                                    <span class="safety-signal-label">Filtered Temperature</span>
+                                    <span class="safety-signal-val" id="dispFilteredTemp">24.8°C</span>
+                                    <span class="safety-signal-sub">5-sample moving avg</span>
+                                </div>
+                            </div>
+                            <!-- CO2 -->
+                            <div class="safety-signal-card">
+                                <div class="safety-icon-box">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+                                    </svg>
+                                </div>
+                                <div class="safety-signal-content">
+                                    <span class="safety-signal-label">Filtered CO₂</span>
+                                    <span class="safety-signal-val" id="dispFilteredCo2">524 ppm</span>
+                                    <span class="safety-signal-sub">10-sample moving avg</span>
+                                </div>
+                            </div>
+                            <!-- Power Stabilization -->
+                            <div class="safety-signal-card">
+                                <div class="safety-icon-box">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                                    </svg>
+                                </div>
+                                <div class="safety-signal-content">
+                                    <span class="safety-signal-label">Power Stabilization</span>
+                                    <span class="safety-signal-val text-cyan" id="dispPwrStatus">Stabilized</span>
+                                    <span class="safety-signal-sub">30s reboot delay</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Middle Grid: Section 2 & Section 3 -->
+                    <div class="safety-middle-grid">
+                        <!-- Section 2: Hysteresis Protection -->
+                        <div class="safety-section-block">
+                            <div class="safety-sec-header">
+                                <span class="safety-sec-badge">2</span>
+                                <span class="safety-sec-title">Hysteresis Protection</span>
+                            </div>
+                            <div class="safety-card-box">
+                                <!-- Row 1: Temp Hysteresis -->
+                                <div class="safety-ctrl-row">
+                                    <div class="safety-icon-box">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
+                                        </svg>
+                                    </div>
+                                    <div class="safety-ctrl-info">
+                                        <span class="safety-ctrl-title">Temperature Hysteresis</span>
+                                        <span class="safety-ctrl-sub">Deadband between ON and OFF thresholds (prevents
+                                            fan oscillation).</span>
+                                    </div>
+                                    <div class="safety-stepper">
+                                        <button class="btn-safety-step" onclick="stepSafetyTempHyst(-0.1)">−</button>
+                                        <span class="safety-step-val" id="safetyTempHystVal">2.0°C</span>
+                                        <button class="btn-safety-step" onclick="stepSafetyTempHyst(0.1)">+</button>
+                                    </div>
+                                </div>
+                                <!-- Row 2: CO2 Hysteresis -->
+                                <div class="safety-ctrl-row">
+                                    <div class="safety-icon-box">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+                                        </svg>
+                                    </div>
+                                    <div class="safety-ctrl-info">
+                                        <span class="safety-ctrl-title">CO₂ Hysteresis</span>
+                                        <span class="safety-ctrl-sub">Deadband between purge trigger and clear
+                                            thresholds.</span>
+                                    </div>
+                                    <div class="safety-stepper">
+                                        <button class="btn-safety-step" onclick="stepSafetyCo2Hyst(-50)">−</button>
+                                        <span class="safety-step-val" id="safetyCo2HystVal">350 ppm</span>
+                                        <button class="btn-safety-step" onclick="stepSafetyCo2Hyst(50)">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Manual Override Lockout -->
+                        <div class="safety-section-block">
+                            <div class="safety-sec-header">
+                                <span class="safety-sec-badge">3</span>
+                                <span class="safety-sec-title">Manual Override Lockout</span>
+                            </div>
+                            <div class="safety-card-box lockout-box">
+                                <div class="lockout-top-row">
+                                    <div class="safety-icon-box lockout-icon-box">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                        </svg>
+                                    </div>
+                                    <div class="lockout-action-col">
+                                        <span class="lockout-label">Active Timeout</span>
+                                        <div class="lockout-action-row">
+                                            <select class="cyber-select safety-select" id="safetyManualDurationSelect"
+                                                onchange="saveSafetyConfig()">
+                                                <option value="300">5 Minutes</option>
+                                                <option value="900">15 Minutes</option>
+                                                <option value="1800" selected>30 Minutes</option>
+                                                <option value="3600">1 Hour</option>
+                                            </select>
+                                            <button class="btn-resume-auto" onclick="clearAllOverrides()">
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2">
+                                                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                                                </svg>
+                                                <span>Resume Auto</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="lockout-desc">Duration automation stands down when a device is manually
+                                    controlled.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Hardware Dwell & Ramp Enforced -->
+                    <div class="safety-section-block">
+                        <div class="safety-sec-header">
+                            <span class="safety-sec-badge">4</span>
+                            <span class="safety-sec-title">Hardware Dwell &amp; Ramp Enforced</span>
+                        </div>
+                        <div class="safety-dwell-row">
+                            <!-- Dwell 1 -->
+                            <div class="safety-dwell-card">
+                                <div class="safety-icon-box">
+                                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M9 18h6" />
+                                        <path d="M10 22h4" />
+                                        <path
+                                            d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14" />
+                                    </svg>
+                                </div>
+                                <div class="safety-dwell-info">
+                                    <span class="safety-dwell-label">Light Min Dwell</span>
+                                    <span class="safety-dwell-val">30s ON / 30s OFF</span>
+                                </div>
+                            </div>
+                            <!-- Dwell 2 -->
+                            <div class="safety-dwell-card">
+                                <div class="safety-icon-box">
+                                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 12c0-3 2.5-5.5 5.5-5.5S23 9 23 12s-2.5 5.5-5.5 5.5S12 15 12 12z" />
+                                        <path d="M12 12c-3 0-5.5-2.5-5.5-5.5S9 1 12 1s5.5 2.5 5.5 5.5S15 12 12 12z" />
+                                        <path d="M12 12c0 3-2.5 5.5-5.5 5.5S1 15 1 12s2.5-5.5 5.5-5.5S12 9 12 12z" />
+                                        <path d="M12 12c3 0 5.5 2.5 5.5 5.5S15 23 12 23s-5.5-2.5-5.5-5.5S9 12 12 12z" />
+                                    </svg>
+                                </div>
+                                <div class="safety-dwell-info">
+                                    <span class="safety-dwell-label">Fan Min Runtime</span>
+                                    <span class="safety-dwell-val">60s ON / 60s OFF</span>
+                                </div>
+                            </div>
+                            <!-- Dwell 3 -->
+                            <div class="safety-dwell-card">
+                                <div class="safety-icon-box">
+                                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="5" y="4" width="14" height="16" rx="2" />
+                                        <line x1="12" y1="9" x2="12" y2="15" />
+                                        <line x1="9" y1="12" x2="15" y2="12" />
+                                    </svg>
+                                </div>
+                                <div class="safety-dwell-info">
+                                    <span class="safety-dwell-label">Relay Interval</span>
+                                    <span class="safety-dwell-val">10s anti-chatter</span>
+                                </div>
+                            </div>
+                            <!-- Dwell 4 -->
+                            <div class="safety-dwell-card">
+                                <div class="safety-icon-box">
+                                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+                                        <polyline points="16 7 22 7 22 13" />
+                                    </svg>
+                                </div>
+                                <div class="safety-dwell-info">
+                                    <span class="safety-dwell-label">Fan Smooth Ramp</span>
+                                    <span class="safety-dwell-val">10% / 5s step</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer-save">
+                    <span class="save-status" id="autoSaveStatus"></span>
+                    <button class="btn-save-automation" onclick="saveAutomationForm()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                            <polyline points="17 21 17 13 7 13 7 21" />
+                            <polyline points="7 3 7 8 15 8" />
+                        </svg>
+                        <span>Save All Automation Rules</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab 2: Lights & Power Content (Matching Picture 1) -->
+            <div class="tab-content" id="tabContentLeds">
+                <!-- Group 1: Indicator Lights -->
+                <div class="settings-group-card">
+                    <div class="group-header">
+                        <div class="group-title-row">
+                            <div class="hex-badge hex-sm hex-theme-blue">
+                                <svg class="hex-frame" width="38" height="38" viewBox="0 0 64 64">
+                                    <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                        stroke-width="1.8" stroke-opacity="0.4" />
+                                    <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.02)"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                <div class="hex-icon-inner">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M9 18h6" />
+                                        <path d="M10 22h4" />
+                                        <path
+                                            d="M12 2a7 7 0 0 0-7 7c0 2.5 1.5 4.5 3 5.5v1.5h8V14.5c1.5-1 3-3 3-5.5a7 7 0 0 0-7-7z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <span class="group-title">Indicator Lights</span>
+                        </div>
+                    </div>
+
+                    <!-- Row 1: Radar Status Light -->
+                    <div class="rule-row">
+                        <div class="rule-row-left">
+                            <div class="hex-badge hex-rule hex-theme-blue">
+                                <svg class="hex-frame" width="42" height="42" viewBox="0 0 64 64">
+                                    <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                        stroke-width="1.8" stroke-opacity="0.35" />
+                                    <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.02)"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                <div class="hex-icon-inner">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M4.93 4.93a10 10 0 0 1 14.14 0" />
+                                        <path d="M7.76 7.76a6 6 0 0 1 8.48 0" />
+                                        <circle cx="12" cy="12" r="2" />
+                                        <line x1="12" y1="14" x2="12" y2="20" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="rule-row-text">
+                                <span class="rule-title">Radar Status Light</span>
+                                <span class="rule-desc">Run LED — C4002 mmWave sensor operational heartbeat
+                                    indicator</span>
+                            </div>
+                        </div>
+                        <div class="rule-actions-group">
+                            <label class="cyber-switch-sub">
+                                <input type="checkbox" id="toggleRadarStatus"
+                                    onchange="setRadarLed('status', this.checked)">
+                                <span class="cyber-switch-thumb-sub"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Radar Detection Light -->
+                    <div class="rule-row">
+                        <div class="rule-row-left">
+                            <div class="hex-badge hex-rule hex-theme-blue">
+                                <svg class="hex-frame" width="42" height="42" viewBox="0 0 64 64">
+                                    <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                        stroke-width="1.8" stroke-opacity="0.35" />
+                                    <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.02)"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                <div class="hex-icon-inner">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                        <circle cx="12" cy="7" r="4" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="rule-row-text">
+                                <span class="rule-title">Radar Detection Light</span>
+                                <span class="rule-desc">Out LED — C4002 mmWave sensor motion / presence detection
+                                    indicator</span>
+                            </div>
+                        </div>
+                        <div class="rule-actions-group">
+                            <label class="cyber-switch-sub">
+                                <input type="checkbox" id="toggleRadarOutput"
+                                    onchange="setRadarLed('output', this.checked)">
+                                <span class="cyber-switch-thumb-sub"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Controller Status Light -->
+                    <div class="rule-row">
+                        <div class="rule-row-left">
+                            <div class="hex-badge hex-rule hex-theme-blue">
+                                <svg class="hex-frame" width="42" height="42" viewBox="0 0 64 64">
+                                    <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                        stroke-width="1.8" stroke-opacity="0.35" />
+                                    <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.02)"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                <div class="hex-icon-inner">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <circle cx="12" cy="8" r="3" />
+                                        <circle cx="7" cy="16" r="3" />
+                                        <circle cx="17" cy="16" r="3" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="rule-row-text">
+                                <span class="rule-title">Controller Status Light</span>
+                                <span class="rule-desc">RGB WS2812B system heartbeat light on ESP32 board (GPIO
+                                    11)</span>
+                            </div>
+                        </div>
+                        <div class="rule-actions-group">
+                            <label class="cyber-switch-sub">
+                                <input type="checkbox" id="toggleControllerLed" checked
+                                    onchange="setControllerStatusLed(this.checked)">
+                                <span class="cyber-switch-thumb-sub"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Group 2: Power Consumption Logging -->
+                <div class="settings-group-card">
+                    <div class="group-header">
+                        <div class="group-title-row">
+                            <div class="hex-badge hex-sm hex-theme-blue">
+                                <svg class="hex-frame" width="38" height="38" viewBox="0 0 64 64">
+                                    <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                        stroke-width="1.8" stroke-opacity="0.4" />
+                                    <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.02)"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                <div class="hex-icon-inner">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <span class="group-title">Power Consumption Logging</span>
+                        </div>
+                        <span class="chip-logging-active" id="chipPowerLogStatus">Logging Active</span>
+                    </div>
+
+                    <!-- Row 1: Enable Logging -->
+                    <div class="rule-row">
+                        <div class="rule-row-left">
+                            <div class="hex-badge hex-rule hex-theme-blue">
+                                <svg class="hex-frame" width="42" height="42" viewBox="0 0 64 64">
+                                    <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                        stroke-width="1.8" stroke-opacity="0.35" />
+                                    <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.02)"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                <div class="hex-icon-inner">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="rule-row-text">
+                                <span class="rule-title">Enable Power Consumption Logging</span>
+                                <span class="rule-desc">Continuously logs energy data to Winbond flash and displays 24h
+                                    consumption chart plus daily and monthly cards on the dashboard.</span>
+                            </div>
+                        </div>
+                        <div class="rule-actions-group">
+                            <label class="cyber-switch-sub">
+                                <input type="checkbox" id="togglePowerLog" checked
+                                    onchange="setPowerLogging(this.checked)">
+                                <span class="cyber-switch-thumb-sub"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Clear Power History -->
+                    <div class="rule-row">
+                        <div class="rule-row-left">
+                            <div class="hex-badge hex-rule hex-theme-amber">
+                                <svg class="hex-frame" width="42" height="42" viewBox="0 0 64 64">
+                                    <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="#f87171"
+                                        stroke-width="1.8" stroke-opacity="0.35" />
+                                    <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(248,113,113,0.02)"
+                                        stroke="#f87171" stroke-width="2" />
+                                </svg>
+                                <div class="hex-icon-inner">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6" />
+                                        <path
+                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                        <line x1="10" y1="11" x2="10" y2="17" />
+                                        <line x1="14" y1="11" x2="14" y2="17" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="rule-row-text">
+                                <span class="rule-title">Clear Power History</span>
+                                <span class="rule-desc">Erase recorded 24h log entries and reset daily and monthly
+                                    energy counters</span>
+                            </div>
+                        </div>
+                        <button class="btn-clear-logs" onclick="clearPowerLogs()">Clear Logs</button>
+                    </div>
+                </div>
+
+                <!-- Group 3: Quick Controls -->
+                <div class="settings-group-card">
+                    <div class="group-header">
+                        <div class="group-title-row">
+                            <div class="hex-badge hex-sm hex-theme-blue">
+                                <svg class="hex-frame" width="38" height="38" viewBox="0 0 64 64">
+                                    <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                        stroke-width="1.8" stroke-opacity="0.4" />
+                                    <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.02)"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                <div class="hex-icon-inner">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path
+                                            d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+                                        <path
+                                            d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+                                        <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+                                        <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <span class="group-title">Quick Controls</span>
+                        </div>
+                        <span class="chip-presets">Presets</span>
+                    </div>
+
+                    <div class="quick-controls-row">
+                        <button class="btn-quick-lights-on" onclick="setAllLights(true)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="4" />
+                                <path
+                                    d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                            </svg>
+                            <span>Turn All Lights ON</span>
+                        </button>
+                        <button class="btn-quick-lights-off" onclick="setAllLights(false)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="4" />
+                                <path
+                                    d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                            </svg>
+                            <span>Turn All Lights OFF</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Group 4: Device & Channel Renaming -->
+                <div class="settings-group-card">
+                    <div class="group-header">
+                        <div class="group-title-row">
+                            <div class="hex-badge hex-sm hex-theme-blue">
+                                <svg class="hex-frame" width="38" height="38" viewBox="0 0 64 64">
+                                    <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                        stroke-width="1.8" stroke-opacity="0.4" />
+                                    <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.02)"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                <div class="hex-icon-inner">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <span class="group-title">Device & Channel Names</span>
+                        </div>
+                        <span class="chip-presets">Custom Labels</span>
+                    </div>
+
+                    <p class="rename-section-desc">Customize display names for both fan speed controllers and all 6
+                        switchable relay cards on the main dashboard.</p>
+
+                    <!-- Fans Subgroup -->
+                    <div class="rename-subgroup-title">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2">
+                            <circle cx="12" cy="12" r="2" fill="#38bdf8" />
+                            <path d="M12 12c-2-2.5-4-3-6-2.5s-3 3-1.5 5 4.5 2 6.5-.5z" fill="#38bdf8"
+                                fill-opacity="0.8" />
+                            <path d="M12 12c2.5-2 3-4 2.5-6s-3-3-5-1.5-2 4.5.5 6.5z" fill="#38bdf8"
+                                fill-opacity="0.8" />
+                            <path d="M12 12c2 2.5 4 3 6 2.5s3-3 1.5-5-4.5-2-6.5.5z" fill="#38bdf8" fill-opacity="0.8" />
+                            <path d="M12 12c-2.5 2-3 4-2.5 6s3 3 5 1.5 2-4.5-.5-6.5z" fill="#38bdf8"
+                                fill-opacity="0.8" />
+                        </svg>
+                        <span>FAN SPEED CONTROLLERS</span>
+                    </div>
+                    <div class="rename-inputs-grid">
+                        <div class="rename-input-item">
+                            <label for="nameInputFan1">Fan 1 Name</label>
+                            <input type="text" id="nameInputFan1" class="styled-cyber-input" placeholder="Fan 1"
+                                maxlength="32">
+                        </div>
+                        <div class="rename-input-item">
+                            <label for="nameInputFan2">Fan 2 Name</label>
+                            <input type="text" id="nameInputFan2" class="styled-cyber-input" placeholder="Fan 2"
+                                maxlength="32">
+                        </div>
+                    </div>
+
+                    <!-- Relays Subgroup -->
+                    <div class="rename-subgroup-title" style="margin-top: 14px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2">
+                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+                            <line x1="12" y1="2" x2="12" y2="12" />
+                        </svg>
+                        <span>SWITCHABLE RELAY CHANNELS</span>
+                    </div>
+                    <div class="rename-inputs-grid">
+                        <div class="rename-input-item">
+                            <label for="nameInputRelay1">Relay 1 Name</label>
+                            <input type="text" id="nameInputRelay1" class="styled-cyber-input"
+                                placeholder="Main Light 1" maxlength="32">
+                        </div>
+                        <div class="rename-input-item">
+                            <label for="nameInputRelay2">Relay 2 Name</label>
+                            <input type="text" id="nameInputRelay2" class="styled-cyber-input"
+                                placeholder="Main Light 2" maxlength="32">
+                        </div>
+                        <div class="rename-input-item">
+                            <label for="nameInputRelay3">Relay 3 Name</label>
+                            <input type="text" id="nameInputRelay3" class="styled-cyber-input" placeholder="Spotlights"
+                                maxlength="32">
+                        </div>
+                        <div class="rename-input-item">
+                            <label for="nameInputRelay4">Relay 4 Name</label>
+                            <input type="text" id="nameInputRelay4" class="styled-cyber-input"
+                                placeholder="Wall Socket 1" maxlength="32">
+                        </div>
+                        <div class="rename-input-item">
+                            <label for="nameInputRelay5">Relay 5 Name</label>
+                            <input type="text" id="nameInputRelay5" class="styled-cyber-input"
+                                placeholder="Wall Socket 2" maxlength="32">
+                        </div>
+                        <div class="rename-input-item">
+                            <label for="nameInputRelay6">Relay 6 Name</label>
+                            <input type="text" id="nameInputRelay6" class="styled-cyber-input"
+                                placeholder="Ambient Strip" maxlength="32">
+                        </div>
+                    </div>
+
+                    <div class="modal-footer-save" style="margin-top: 16px;">
+                        <span class="save-status" id="nameSaveStatus"></span>
+                        <button class="btn-save-automation" onclick="saveChannelNames()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                                <polyline points="17 21 17 13 7 13 7 21" />
+                                <polyline points="7 3 7 8 15 8" />
+                            </svg>
+                            <span>Save Channel Names</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Group 5: Dashboard Layout & Card Order -->
+                <div class="settings-group-card" style="margin-top: 20px;">
+                    <div class="group-header">
+                        <div class="group-title-row">
+                            <div class="hex-badge hex-sub">
+                                <svg class="hex-frame" width="36" height="36" viewBox="0 0 64 64">
+                                    <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="#38bdf8"
+                                        stroke-width="1.8" stroke-opacity="0.4" />
+                                    <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(14, 165, 233, 0.08)"
+                                        stroke="#38bdf8" stroke-width="2" />
+                                </svg>
+                                <div class="hex-icon-inner">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="12 2 2 7 12 12 22 7 12 2" />
+                                        <polyline points="2 17 12 22 22 17" />
+                                        <polyline points="2 12 12 17 22 12" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="settings-title-text" style="display: flex; flex-direction: column; gap: 3px;">
+                                <span class="group-title">Dashboard Card Positioning</span>
+                                <span class="group-desc" style="font-size: 11.5px; color: #8899ac;">Use Move Up (▲) and
+                                    Move Down (▼) buttons to reorder cards</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="save-status" id="orderSaveStatus" style="font-size: 11.5px;"></span>
+                            <span class="chip chip-cyan">Layout Order</span>
+                        </div>
+                    </div>
+
+                    <div class="card-order-list" id="cardOrderList">
+                        <!-- Relays Row -->
+                        <div class="card-order-item" id="orderItem_relays">
+                            <div class="card-order-left">
+                                <span class="card-order-pos-badge" id="posNum_relays">#1</span>
+                                <div class="card-order-badge">
+                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#38bdf8"
+                                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+                                        <line x1="12" y1="2" x2="12" y2="12" />
+                                    </svg>
+                                </div>
+                                <div class="card-order-info">
+                                    <span class="card-order-name">Switchable Relays (6 Channels)</span>
+                                    <span class="card-order-desc">Relay switches with bulk controls and custom
+                                        names</span>
+                                </div>
+                            </div>
+                            <div class="card-order-actions">
+                                <button type="button" class="btn-order-arrow btn-order-up"
+                                    onclick="moveCardOrder('relays', -1)" title="Move Up">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="18 15 12 9 6 15" />
+                                    </svg>
+                                </button>
+                                <button type="button" class="btn-order-arrow btn-order-down"
+                                    onclick="moveCardOrder('relays', 1)" title="Move Down">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="6 9 12 15 18 9" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Fans Row -->
+                        <div class="card-order-item" id="orderItem_fans">
+                            <div class="card-order-left">
+                                <span class="card-order-pos-badge" id="posNum_fans">#2</span>
+                                <div class="card-order-badge">
+                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#38bdf8"
+                                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="2" />
+                                        <path d="M12 12c-2-2.5-4-3-6-2.5s-3 3-1.5 5 4.5 2 6.5-.5z" />
+                                        <path d="M12 12c2.5-2 3-4 2.5-6s-3-3-5-1.5-2 4.5.5 6.5z" />
+                                        <path d="M12 12c2 2.5 4 3 6 2.5s3-3 1.5-5-4.5-2-6.5.5z" />
+                                        <path d="M12 12c-2.5 2-3 4-2.5 6s3 3 5 1.5 2-4.5-.5-6.5z" />
+                                    </svg>
+                                </div>
+                                <div class="card-order-info">
+                                    <span class="card-order-name">Dual Fan Controllers</span>
+                                    <span class="card-order-desc">AC Triac + Relay interlocked fan speed gauges</span>
+                                </div>
+                            </div>
+                            <div class="card-order-actions">
+                                <button type="button" class="btn-order-arrow btn-order-up"
+                                    onclick="moveCardOrder('fans', -1)" title="Move Up">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="18 15 12 9 6 15" />
+                                    </svg>
+                                </button>
+                                <button type="button" class="btn-order-arrow btn-order-down"
+                                    onclick="moveCardOrder('fans', 1)" title="Move Down">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="6 9 12 15 18 9" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Environmental Row -->
+                        <div class="card-order-item" id="orderItem_env">
+                            <div class="card-order-left">
+                                <span class="card-order-pos-badge" id="posNum_env">#3</span>
+                                <div class="card-order-badge">
+                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#10b981"
+                                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                    </svg>
+                                </div>
+                                <div class="card-order-info">
+                                    <span class="card-order-name">Environmental & Presence</span>
+                                    <span class="card-order-desc">CO₂, Climate, mmWave Human Radar & Breathing</span>
+                                </div>
+                            </div>
+                            <div class="card-order-actions">
+                                <button type="button" class="btn-order-arrow btn-order-up"
+                                    onclick="moveCardOrder('env', -1)" title="Move Up">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="18 15 12 9 6 15" />
+                                    </svg>
+                                </button>
+                                <button type="button" class="btn-order-arrow btn-order-down"
+                                    onclick="moveCardOrder('env', 1)" title="Move Down">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="6 9 12 15 18 9" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- AC Power Row -->
+                        <div class="card-order-item" id="orderItem_power">
+                            <div class="card-order-left">
+                                <span class="card-order-pos-badge" id="posNum_power">#4</span>
+                                <div class="card-order-badge">
+                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#f59e0b"
+                                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                                    </svg>
+                                </div>
+                                <div class="card-order-info">
+                                    <span class="card-order-name">AC Power & Energy Monitor</span>
+                                    <span class="card-order-desc">ACS37800 telemetry, daily/monthly kWh & 24h
+                                        chart</span>
+                                </div>
+                            </div>
+                            <div class="card-order-actions">
+                                <button type="button" class="btn-order-arrow btn-order-up"
+                                    onclick="moveCardOrder('power', -1)" title="Move Up">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="18 15 12 9 6 15" />
+                                    </svg>
+                                </button>
+                                <button type="button" class="btn-order-arrow btn-order-down"
+                                    onclick="moveCardOrder('power', 1)" title="Move Down">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="6 9 12 15 18 9" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <span class="save-status" id="ledSaveStatus" style="text-align: center;"></span>
+            </div>
+
+            <!-- Tab 3: Wi-Fi Configuration Content (Matching Picture 2) -->
+            <div class="tab-content" id="tabContentWifi">
+                <!-- Top Status Cards: 2 Columns -->
+                <div class="wifi-status-grid">
+                    <div class="wifi-stat-card">
+                        <div class="wifi-stat-badge">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" />
+                            </svg>
+                        </div>
+                        <div class="wifi-stat-info">
+                            <span class="wifi-stat-label">CURRENT CONNECTION</span>
+                            <span class="wifi-stat-val" id="wifiCurSsid">WH_MI</span>
+                        </div>
+                    </div>
+
+                    <div class="wifi-stat-card">
+                        <div class="wifi-stat-badge">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+                                <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+                                <line x1="6" y1="6" x2="6.01" y2="6" />
+                                <line x1="6" y1="18" x2="6.01" y2="18" />
+                            </svg>
+                        </div>
+                        <div class="wifi-stat-info">
+                            <span class="wifi-stat-label">ASSIGNED IP</span>
+                            <span class="wifi-stat-val" id="wifiCurIp">192.168.100.232</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Available Wi-Fi Networks Card -->
+                <div class="settings-group-card">
+                    <div class="wifi-scan-header">
+                        <span class="wifi-scan-title">AVAILABLE WI-FI NETWORKS</span>
+                        <button class="btn-scan-aps" id="btnScanWifi" onclick="scanWifiNetworks()">
+                            <svg class="scan-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                            </svg>
+                            <span id="scanBtnText">Scan APs</span>
+                        </button>
+                    </div>
+
+                    <div class="wifi-networks-box" id="wifiNetworksBox">
+                        <p class="empty-hint">Click "Scan APs" to discover nearby 2.4GHz Wi-Fi networks.</p>
+                    </div>
+
+                    <!-- Input Fields -->
+                    <div class="wifi-fields-group">
+                        <div class="wifi-input-row">
+                            <div class="wifi-field-label">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                        d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" />
+                                </svg>
+                                <span>Network SSID</span>
+                            </div>
+                            <input type="text" id="wifiSsidInput" class="styled-cyber-input"
+                                placeholder="Enter Wi-Fi SSID">
+                        </div>
+
+                        <div class="wifi-input-row">
+                            <div class="wifi-field-label">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                </svg>
+                                <span>Password</span>
+                            </div>
+                            <div class="password-input-wrap">
+                                <input type="password" id="wifiPassInput" class="styled-cyber-input"
+                                    placeholder="Enter Wi-Fi Password">
+                                <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility()"
+                                    title="Toggle visibility">
+                                    <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Action -->
+                <div class="modal-footer-save">
+                    <span class="save-status" id="wifiSaveStatus"></span>
+                    <button class="btn-save-automation" onclick="saveWifiConfig()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" />
+                        </svg>
+                        <span>Save & Connect</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab: Home Assistant & MQTT Configuration Content -->
+            <div class="tab-content" id="tabContentMqtt">
+                <!-- Top Status Cards: 2 Columns -->
+                <div class="wifi-status-grid">
+                    <div class="wifi-stat-card">
+                        <div class="wifi-stat-badge">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                <polyline points="9 22 9 12 15 12 15 22" />
+                            </svg>
+                        </div>
+                        <div class="wifi-stat-info">
+                            <span class="wifi-stat-label">BROKER STATUS</span>
+                            <span class="wifi-stat-val" id="mqttStatusVal">Disconnected</span>
+                        </div>
+                    </div>
+
+                    <div class="wifi-stat-card">
+                        <div class="wifi-stat-badge">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+                                <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+                                <line x1="6" y1="6" x2="6.01" y2="6" />
+                                <line x1="6" y1="18" x2="6.01" y2="18" />
+                            </svg>
+                        </div>
+                        <div class="wifi-stat-info">
+                            <span class="wifi-stat-label">DISCOVERY NODE ID</span>
+                            <span class="wifi-stat-val" id="mqttNodeIdVal">room_controller</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MQTT Settings Card -->
+                <div class="settings-group-card">
+                    <div class="group-header">
+                        <div class="group-title-row">
+                            <div class="hex-badge hex-sm hex-theme-blue">
+                                <svg class="hex-frame" width="38" height="38" viewBox="0 0 64 64">
+                                    <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="currentColor"
+                                        stroke-width="1.8" stroke-opacity="0.4" />
+                                    <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(255,255,255,0.02)"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                <div class="hex-icon-inner">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                        <polyline points="9 22 9 12 15 12 15 22" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <span class="group-title">MQTT Auto-Discovery Connection</span>
+                        </div>
+                    </div>
+
+                    <p class="rename-section-desc">Connects to your Home Assistant MQTT broker (e.g., Mosquitto).
+                        Entities for all 6 relays, dual fan controllers, AC power telemetry, CO₂ climate sensors, and
+                        mmWave radar are automatically discovered without manual YAML.</p>
+
+                    <!-- Toggle Enable -->
+                    <div class="rule-row"
+                        style="padding-top: 14px; padding-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                        <div class="rule-row-left">
+                            <div class="rule-row-text">
+                                <span class="rule-title">Enable Home Assistant Integration</span>
+                                <span class="rule-desc">Publish MQTT state updates and listen for Home Assistant control
+                                    commands</span>
+                            </div>
+                        </div>
+                        <label class="cyber-toggle-green">
+                            <input type="checkbox" id="mqttEnableToggle">
+                            <span class="cyber-slider-green"></span>
+                        </label>
+                    </div>
+
+                    <!-- Input Fields -->
+                    <div class="wifi-fields-group">
+                        <div class="wifi-input-row">
+                            <div class="wifi-field-label">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <line x1="2" y1="12" x2="22" y2="12" />
+                                    <path
+                                        d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                                </svg>
+                                <span>Broker Host / IP</span>
+                            </div>
+                            <input type="text" id="mqttServerInput" class="styled-cyber-input"
+                                placeholder="e.g. 192.168.1.100 or homeassistant.local">
+                        </div>
+
+                        <div class="wifi-input-row">
+                            <div class="wifi-field-label">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="2" width="20" height="8" rx="2" />
+                                    <rect x="2" y="14" width="20" height="8" rx="2" />
+                                </svg>
+                                <span>Port</span>
+                            </div>
+                            <input type="number" id="mqttPortInput" class="styled-cyber-input" placeholder="1883"
+                                value="1883">
+                        </div>
+
+                        <div class="wifi-input-row">
+                            <div class="wifi-field-label">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg>
+                                <span>Username (Optional)</span>
+                            </div>
+                            <input type="text" id="mqttUserInput" class="styled-cyber-input"
+                                placeholder="MQTT username (if configured)">
+                        </div>
+
+                        <div class="wifi-input-row">
+                            <div class="wifi-field-label">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                </svg>
+                                <span>Password (Optional)</span>
+                            </div>
+                            <div class="password-input-wrap">
+                                <input type="password" id="mqttPassInput" class="styled-cyber-input"
+                                    placeholder="MQTT password">
+                                <button type="button" class="btn-toggle-pwd" onclick="toggleMqttPasswordVisibility()"
+                                    title="Toggle visibility">
+                                    <svg id="mqttEyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="wifi-input-row">
+                            <div class="wifi-field-label">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="4 17 10 11 4 5" />
+                                    <line x1="12" y1="19" x2="20" y2="19" />
+                                </svg>
+                                <span>Topic Node ID</span>
+                            </div>
+                            <input type="text" id="mqttNodeIdInput" class="styled-cyber-input"
+                                placeholder="room_controller" value="room_controller">
+                        </div>
+
+                        <div class="wifi-input-row">
+                            <div class="wifi-field-label">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                        d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                                </svg>
+                                <span>Discovery Prefix</span>
+                            </div>
+                            <input type="text" id="mqttPrefixInput" class="styled-cyber-input"
+                                placeholder="homeassistant" value="homeassistant">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Action Buttons -->
+                <div class="modal-footer-save"
+                    style="display: flex; gap: 12px; justify-content: flex-end; align-items: center;">
+                    <span class="save-status" id="mqttSaveStatus"></span>
+                    <button class="btn-scan-aps" id="btnMqttDiscovery" onclick="sendMqttDiscoveryNow()"
+                        style="padding: 10px 16px; border-radius: 8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                        </svg>
+                        <span>Send Discovery Now</span>
+                    </button>
+                    <button class="btn-save-automation" onclick="saveMqttConfig()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                            <polyline points="17 21 17 13 7 13 7 21" />
+                            <polyline points="7 3 7 8 15 8" />
+                        </svg>
+                        <span>Save &amp; Connect</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab 4: OTA Updates Content (Matching Picture 3) -->
+            <div class="tab-content" id="tabContentOta">
+                <div class="ota-section-title">Update Target</div>
+
+                <!-- Target Radio Pill Group -->
+                <div class="ota-pills-row">
+                    <label class="ota-radio-pill active" id="otaPillFirmware" onclick="selectOtaTarget('firmware')">
+                        <input type="radio" name="otaTarget" value="firmware" checked style="display:none;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="4" y="4" width="16" height="16" rx="2" />
+                            <rect x="9" y="9" width="6" height="6" />
+                            <line x1="9" y1="1" x2="9" y2="4" />
+                            <line x1="15" y1="1" x2="15" y2="4" />
+                            <line x1="9" y1="20" x2="9" y2="23" />
+                            <line x1="15" y1="20" x2="15" y2="23" />
+                            <line x1="20" y1="9" x2="23" y2="9" />
+                            <line x1="20" y1="14" x2="23" y2="14" />
+                            <line x1="1" y1="9" x2="4" y2="9" />
+                            <line x1="1" y1="14" x2="4" y2="14" />
+                        </svg>
+                        <span>Firmware (.bin)</span>
+                    </label>
+
+                    <label class="ota-radio-pill" id="otaPillFilesystem" onclick="selectOtaTarget('filesystem')">
+                        <input type="radio" name="otaTarget" value="filesystem" style="display:none;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                        </svg>
+                        <span>LittleFS Filesystem (.bin)</span>
+                    </label>
+                </div>
+
+                <!-- Drag & Drop Upload Zone -->
+                <div class="ota-drop-box" id="otaDropZone" onclick="document.getElementById('otaFileInput').click()">
+                    <div class="ota-drop-icon">
+                        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#00bfff" stroke-width="2.2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                    </div>
+                    <p class="ota-drop-hint">Drag & Drop <code>.bin</code> file or <span
+                            class="browse-link">Browse</span></p>
+                    <input type="file" id="otaFileInput" accept=".bin" style="display:none"
+                        onchange="handleOtaFileSelected(this)">
+                </div>
+
+                <!-- Status & Readiness Cards (2 Columns) -->
+                <div class="ota-status-grid">
+                    <div class="ota-stat-tile">
+                        <div class="ota-stat-circle">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="16" y1="13" x2="8" y2="13" />
+                                <line x1="16" y1="17" x2="8" y2="17" />
+                                <polyline points="10 9 9 9 8 9" />
+                            </svg>
+                        </div>
+                        <div class="ota-stat-texts">
+                            <span class="ota-stat-title" id="otaTileFileName">No file selected</span>
+                            <span class="ota-stat-sub" id="otaTileFileSub">Please select a .bin file to upload</span>
+                        </div>
+                    </div>
+
+                    <div class="ota-stat-tile">
+                        <div class="ota-stat-circle">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                <polyline points="22 4 12 14.01 9 11.01" />
+                            </svg>
+                        </div>
+                        <div class="ota-stat-texts">
+                            <span class="ota-stat-title" id="otaTileReadyTitle">Ready to upload</span>
+                            <span class="ota-stat-sub" id="otaTileReadySub">System will verify before flashing</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Progress & Status -->
+                <div class="ota-progress-container" id="otaProgressContainer" style="display:none;">
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar-fill" id="otaProgressBar"></div>
+                    </div>
+                    <div class="progress-status-row">
+                        <span id="otaProgressText">Uploading: 0%</span>
+                        <span id="otaBytesText">0 KB / 0 KB</span>
+                    </div>
+                </div>
+
+                <div class="modal-footer-save">
+                    <span class="save-status" id="otaStatusMsg"></span>
+                    <button class="btn-save-automation" id="btnStartOta" onclick="startOtaUpload()" disabled>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        <span>Upload & Flash</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab 5: System Info Content (Matching Picture 4) -->
+            <div class="tab-content" id="tabContentSystem">
+                <!-- 6 System Specification Cards (2 Columns x 3 Rows) -->
+                <div class="sys-specs-grid">
+                    <!-- Tile 1: Target Hardware -->
+                    <div class="sys-spec-card">
+                        <div class="sys-spec-badge">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="4" y="4" width="16" height="16" rx="2" />
+                                <rect x="9" y="9" width="6" height="6" />
+                                <line x1="9" y1="1" x2="9" y2="4" />
+                                <line x1="15" y1="1" x2="15" y2="4" />
+                                <line x1="9" y1="20" x2="9" y2="23" />
+                                <line x1="15" y1="20" x2="15" y2="23" />
+                                <line x1="20" y1="9" x2="23" y2="9" />
+                                <line x1="20" y1="14" x2="23" y2="14" />
+                                <line x1="1" y1="9" x2="4" y2="9" />
+                                <line x1="1" y1="14" x2="4" y2="14" />
+                            </svg>
+                        </div>
+                        <div class="sys-spec-content">
+                            <span class="sys-spec-label">TARGET HARDWARE</span>
+                            <span class="sys-spec-val">ESP32-C6 WROOM-1</span>
+                        </div>
+                    </div>
+
+                    <!-- Tile 2: Processor Core -->
+                    <div class="sys-spec-card">
+                        <div class="sys-spec-badge">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="4" y="4" width="16" height="16" rx="2" />
+                                <path d="M9 9h6v6H9z" />
+                                <line x1="9" y1="1" x2="9" y2="4" />
+                                <line x1="15" y1="1" x2="15" y2="4" />
+                                <line x1="9" y1="20" x2="9" y2="23" />
+                                <line x1="15" y1="20" x2="15" y2="23" />
+                                <line x1="20" y1="9" x2="23" y2="9" />
+                                <line x1="20" y1="14" x2="23" y2="14" />
+                                <line x1="1" y1="9" x2="4" y2="9" />
+                                <line x1="1" y1="14" x2="4" y2="14" />
+                            </svg>
+                        </div>
+                        <div class="sys-spec-content">
+                            <span class="sys-spec-label">PROCESSOR CORE</span>
+                            <span class="sys-spec-val">32-bit RISC-V @ 160MHz</span>
+                        </div>
+                    </div>
+
+                    <!-- Tile 3: Internal Flash -->
+                    <div class="sys-spec-card">
+                        <div class="sys-spec-badge">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="4" y="2" width="16" height="20" rx="2" />
+                                <circle cx="12" cy="14" r="4" />
+                                <line x1="12" y1="6" x2="12.01" y2="6" />
+                            </svg>
+                        </div>
+                        <div class="sys-spec-content">
+                            <span class="sys-spec-label">INTERNAL FLASH</span>
+                            <span class="sys-spec-val">4 MB (Quad SPI)</span>
+                        </div>
+                    </div>
+
+                    <!-- Tile 4: External Flash -->
+                    <div class="sys-spec-card">
+                        <div class="sys-spec-badge">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="4" y="2" width="16" height="20" rx="2" />
+                                <path d="M8 6h8" />
+                                <path d="M8 10h8" />
+                                <path d="M8 14h8" />
+                                <path d="M8 18h8" />
+                            </svg>
+                        </div>
+                        <div class="sys-spec-content">
+                            <span class="sys-spec-label">EXTERNAL FLASH</span>
+                            <span class="sys-spec-val">Winbond W25Q128 (16 MB SPI)</span>
+                        </div>
+                    </div>
+
+                    <!-- Tile 5: File System -->
+                    <div class="sys-spec-card">
+                        <div class="sys-spec-badge">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                            </svg>
+                        </div>
+                        <div class="sys-spec-content">
+                            <span class="sys-spec-label">FILE SYSTEM</span>
+                            <span class="sys-spec-val">LittleFS (Ring Buffer Enabled)</span>
+                        </div>
+                    </div>
+
+                    <!-- Tile 6: Wireless Connectivity -->
+                    <div class="sys-spec-card">
+                        <div class="sys-spec-badge">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" />
+                            </svg>
+                        </div>
+                        <div class="sys-spec-content">
+                            <span class="sys-spec-label">WIRELESS CONNECTIVITY</span>
+                            <span class="sys-spec-val">Wi-Fi 6 (802.11ax) • BLE 5</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card: Developer & Channel Info (Tech Panda) -->
+                <div class="system-author-card">
+                    <div class="system-author-left">
+                        <div class="author-avatar-wrap">
+                            <img src="/techpanda.webp" alt="Tech Panda" class="author-avatar-img">
+                        </div>
+                        <div class="author-texts">
+                            <div class="author-title-row">
+                                <span class="author-name">Tech Panda</span>
+                                <span class="author-badge">Official Channel</span>
+                            </div>
+                            <span class="author-desc">Smart home automation, IoT hardware projects, ESP32 development &
+                                tutorials</span>
+                        </div>
+                    </div>
+                    <a href="https://www.youtube.com/@TechPanda-4k" target="_blank" rel="noopener noreferrer"
+                        class="btn-youtube-channel">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                        </svg>
+                        <span>Visit Channel</span>
+                    </a>
+                </div>
+
+                <!-- Bottom Card: System Maintenance -->
+                <div class="system-maint-card">
+                    <div class="system-maint-left">
+                        <div class="hex-badge hex-maint">
+                            <svg class="hex-frame" width="46" height="46" viewBox="0 0 64 64">
+                                <polygon points="32,4 58,19 58,45 32,60 6,45 6,19" fill="none" stroke="#f43f5e"
+                                    stroke-width="1.8" stroke-opacity="0.4" />
+                                <polygon points="32,8 54,21 54,43 32,56 10,43 10,21" fill="rgba(244,63,94,0.06)"
+                                    stroke="#f43f5e" stroke-width="2" />
+                            </svg>
+                            <div class="hex-icon-inner">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f43f5e"
+                                    stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                    <line x1="12" y1="9" x2="12" y2="13" />
+                                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="system-maint-texts">
+                            <span class="system-maint-title">SYSTEM MAINTENANCE</span>
+                            <span class="system-maint-desc">Restart System Reboots ESP32-C6 controller safely without
+                                losing persistent memory</span>
+                        </div>
+                    </div>
+                    <button class="btn-reboot-controller" onclick="restartSystem()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                        </svg>
+                        <span>Reboot Controller</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/app.js?v=9.6"></script>
+</body>
+
+</html>
