@@ -2,6 +2,8 @@
 
 A modular, non-blocking, production-ready C++ firmware for the **ESP32-C6-WROOM-1** smart home controller using PlatformIO and the Arduino framework.
 
+📺 **[Watch the project video on YouTube](https://youtu.be/7oDmBWbUF9s)**
+
 > 📖 **Looking for the complete feature manual and automation guide?**  
 > Read the full [User Manual & Feature Guide (USER_MANUAL.md)](USER_MANUAL.md).
 
@@ -95,3 +97,15 @@ pio device monitor
 2. Open your web browser and navigate to:
    - `http://192.168.4.1` when connected directly to the controller's access point.
    - When connected to the same router as the controller, use the station IP printed in the Serial Monitor or `http://room-controller.local` if your network supports mDNS.
+
+## 🛠️ Recommended Manufacturing Partner
+
+<a href="https://jlcpcb.com?from=PPOAXWDGOGZXJOSA" target="_blank">
+  <img src="https://raw.githubusercontent.com/arslansadiq87/techpanda-inventory/main/PCBlogo.png" alt="JLCPCB Logo" width="220" />
+</a>
+
+> **New users receive $123 in coupons.** [Order now with JLCPCB](https://jlcpcb.com?from=PPOAXWDGOGZXJOSA).
+>
+> JLCPCB provides seamless workflows, transparent pricing, and verified quality for 1–4 layer PCBs – design in EDA, order PCB.
+
+## App Download
