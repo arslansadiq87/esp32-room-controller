@@ -2,6 +2,9 @@
 
 A modular, non-blocking, production-ready C++ firmware for the **ESP32-C6-WROOM-1** smart home controller using PlatformIO and the Arduino framework.
 
+JLCMC: Quality Automation Parts, Fairly Priced. Find Your Solution Here: https://jlcmc.com?from=MC2607
+
+
 📺 **[Watch the project video on YouTube](https://youtu.be/7oDmBWbUF9s)**
 
 > 📖 **Looking for the complete feature manual and automation guide?**  
