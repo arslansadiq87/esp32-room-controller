@@ -1,7 +1,9 @@
 # ESP32-C6-WROOM-1 Smart Home Room Controller Firmware
 
 A modular, non-blocking, production-ready C++ firmware for the **ESP32-C6-WROOM-1** smart home controller using PlatformIO and the Arduino framework.
-
+<p align="center">
+  <img src="MCLOGO.png" alt="MCLogo logo" width="180">
+  </p>
 JLCMC: Quality Automation Parts, Fairly Priced. Find Your Solution Here: https://jlcmc.com?from=MC2607
 
 
