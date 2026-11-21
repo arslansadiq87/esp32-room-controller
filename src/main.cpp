@@ -17,6 +17,7 @@
 #include "PowerLogManager.h"
 #include "MqttManager.h"
 #include <Preferences.h>
+#include <ArduinoJson.h>
 
 // Non-blocking WiFi reconnection tracker
 static uint32_t lastWiFiCheck = 0;
@@ -27,6 +28,7 @@ void initWiFi() {
 
     // Set WiFi to Dual Mode (AP + Station) for reliable initial configuration and local control
     WiFi.mode(WIFI_AP_STA);
+    WiFi.setAutoReconnect(true);
 
     // Start SoftAP
     WiFi.softAP(DEFAULT_AP_SSID, DEFAULT_AP_PASS);
@@ -39,8 +41,20 @@ void initWiFi() {
 
     Preferences prefs;
     if (prefs.begin(NVS_NAMESPACE_WIFI, true)) {
-        String savedSsid = prefs.getString("ssid", "");
-        String savedPass = prefs.getString("pass", "");
+        String savedSsid;
+        String savedPass;
+        JsonDocument saved;
+        if (prefs.isKey("station") &&
+            !deserializeJson(saved, prefs.getString("station")) &&
+            saved["ssid"].is<const char*>() && saved["pass"].is<const char*>()) {
+            savedSsid = saved["ssid"].as<const char*>();
+            savedPass = saved["pass"].as<const char*>();
+        }
+        // Keep reading credentials saved by earlier firmware versions.
+        if (savedSsid.isEmpty() && prefs.isKey("ssid")) {
+            savedSsid = prefs.getString("ssid", "");
+            savedPass = prefs.getString("pass", "");
+        }
         if (savedSsid.length() > 0) {
             staSsid = savedSsid;
             staPass = savedPass;

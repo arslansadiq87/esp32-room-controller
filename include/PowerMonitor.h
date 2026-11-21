@@ -97,5 +97,7 @@ private:
 
     // Scaling factors based on voltage divider and shunt / Hall range
     float voltageMultiplier = 0.0084f; // Default calibration for 250V AC mains
-    float currentMultiplier = 0.0012f; // Default calibration for 15A/30A sensor
+    // Set to the installed ACS37800 variant's rated peak current.
+    static constexpr float CURRENT_RANGE_AMPS = 15.0f;
+    float currentMultiplier = CURRENT_RANGE_AMPS / (0.84f * 65536.0f);
 };

@@ -3,12 +3,9 @@
 #include "DimmerManager.h"
 
 // ACS37800 Standard Register Addresses
-static constexpr uint8_t REG_VRMS_IRMS   = 0x20; // [31:16] VRMS, [15:0] IRMS
-static constexpr uint8_t REG_PACTIVE     = 0x21; // Active Power
-static constexpr uint8_t REG_PAPPARENT   = 0x22; // Apparent Power
-static constexpr uint8_t REG_PREACTIVE   = 0x23; // Reactive Power
-static constexpr uint8_t REG_PFACTOR     = 0x24; // Power Factor
-static constexpr uint8_t REG_STATUS      = 0x2B; // Status Flags
+static constexpr uint8_t REG_VRMS_IRMS   = 0x20; // [31:16] IRMS, [15:0] VRMS
+static constexpr uint8_t REG_PACTIVE     = 0x21; // [31:16] PIMAG, [15:0] PACTIVE
+static constexpr uint8_t REG_PAPPARENT   = 0x22; // PFACTOR in [26:16], PAPPARENT in [15:0]
 
 PowerMonitor& PowerMonitor::getInstance() {
     static PowerMonitor instance;
@@ -204,14 +201,14 @@ void PowerMonitor::update() {
 
     uint32_t rawVrmsIrms = 0;
     uint32_t rawPactive = 0;
-    uint32_t rawPfactor = 0;
+    uint32_t rawPapparent = 0;
 
     if (readRegister32(REG_VRMS_IRMS, rawVrmsIrms)) {
         i2cErrorCount = 0;
 
-        // Upper 16 bits = VRMS raw, Lower 16 bits = IRMS raw
-        uint16_t vrmsRaw = (rawVrmsIrms >> 16) & 0xFFFF;
-        uint16_t irmsRaw = rawVrmsIrms & 0xFFFF;
+        // ACS37800 register 0x20 places VRMS in bits 15:0 and IRMS in bits 31:16.
+        uint16_t vrmsRaw = rawVrmsIrms & 0xFFFF;
+        uint16_t irmsRaw = (rawVrmsIrms >> 16) & 0xFFFF;
 
         float instantV = (float)vrmsRaw * voltageMultiplier;
         float instantI = (float)irmsRaw * currentMultiplier;
@@ -232,26 +229,33 @@ void PowerMonitor::update() {
                 telemetry.activePower = 0.0f;
                 telemetry.apparentPower = 0.0f;
                 telemetry.reactivePower = 0.0f;
-                telemetry.powerFactor = 1.0f;
+                telemetry.powerFactor = 0.0f;
             } else {
                 telemetry.currentRms = instantI;
 
+                // RMS codes have 16 fractional bits. Power codes have 15
+                // (active) or 16 (apparent and reactive) fractional bits.
+                const float powerScale = voltageMultiplier * currentMultiplier * 65536.0f;
                 if (readRegister32(REG_PACTIVE, rawPactive)) {
-                    int32_t pActiveSigned = (int32_t)rawPactive;
-                    float calcPower = (float)pActiveSigned * (voltageMultiplier * currentMultiplier);
-                    telemetry.activePower = (calcPower > 0.0f) ? calcPower : 0.0f;
+                    const int32_t active = static_cast<int32_t>(rawPactive & 0xFFFF);
+                    const int32_t signedActive = active >= 0x8000 ? active - 0x10000 : active;
+                    telemetry.rawActivePower = signedActive * (2.0f * powerScale);
+                    telemetry.activePower = fabsf(telemetry.rawActivePower);
+                    telemetry.reactivePower = (rawPactive >> 16) * powerScale;
                 } else {
-                    telemetry.activePower = telemetry.voltageRms * telemetry.currentRms;
+                    telemetry.activePower = 0.0f;
+                    telemetry.reactivePower = 0.0f;
                 }
 
-                if (readRegister32(REG_PFACTOR, rawPfactor)) {
-                    int16_t pfRaw = (int16_t)(rawPfactor & 0xFFFF);
-                    telemetry.powerFactor = constrain((float)pfRaw / 2048.0f, 0.0f, 1.0f);
+                if (readRegister32(REG_PAPPARENT, rawPapparent)) {
+                    const int32_t pf = (rawPapparent >> 16) & 0x7FF;
+                    const int32_t signedPf = pf >= 0x400 ? pf - 0x800 : pf;
+                    telemetry.powerFactor = fabsf(signedPf / 1024.0f);
+                    telemetry.apparentPower = (rawPapparent & 0xFFFF) * powerScale;
                 } else {
-                    telemetry.powerFactor = 0.98f;
+                    telemetry.powerFactor = 0.0f;
+                    telemetry.apparentPower = 0.0f;
                 }
-
-                telemetry.apparentPower = telemetry.voltageRms * telemetry.currentRms;
             }
 
             telemetry.lineFrequency = (float)AC_MAINS_FREQ_HZ;

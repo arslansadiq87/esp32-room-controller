@@ -553,12 +553,22 @@ void WebManager::setupRoutes() {
 
             if (strlen(ssid) > 0) {
                 Preferences prefs;
-                if (prefs.begin(NVS_NAMESPACE_WIFI, false)) {
-                    prefs.putString("ssid", ssid);
-                    prefs.putString("pass", pass);
-                    prefs.end();
-                    Serial.printf("[WIFI] New credentials saved in NVS: SSID '%s'\n", ssid);
+                if (!prefs.begin(NVS_NAMESPACE_WIFI, false)) {
+                    request->send(500, "application/json", "{\"error\":\"Could not open Wi-Fi settings storage\"}");
+                    return;
                 }
+                JsonDocument station;
+                station["ssid"] = ssid;
+                station["pass"] = pass;
+                String serialized;
+                serializeJson(station, serialized);
+                const bool saved = prefs.putString("station", serialized) == serialized.length();
+                prefs.end();
+                if (!saved) {
+                    request->send(500, "application/json", "{\"error\":\"Could not save Wi-Fi credentials\"}");
+                    return;
+                }
+                Serial.printf("[WIFI] New credentials saved in NVS: SSID '%s'\n", ssid);
 
                 if (reconnect) {
                     WiFi.begin(ssid, pass);

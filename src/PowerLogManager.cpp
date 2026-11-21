@@ -202,17 +202,9 @@ void PowerLogManager::recordSample() {
     PowerData pwr = PowerMonitor::getInstance().getData();
     float sampleDurationSec = (float)POWER_LOG_INTERVAL_SEC;
 
-    // Average power over the interval
-    float intervalAvgWatts = 0.0f;
-    float intervalWh = 0.0f;
-    if (pwr.connectionState == SENSOR_CONNECTED && pwr.acInputState == AC_PRESENT) {
-        if (currentIntervalWattSeconds > 0.0 && sampleDurationSec > 0.0f) {
-            intervalAvgWatts = (float)(currentIntervalWattSeconds / sampleDurationSec);
-            intervalWh = (float)(currentIntervalWattSeconds / 3600.0);
-        } else {
-            intervalAvgWatts = pwr.activePower;
-        }
-    }
+    // Preserve energy accumulated earlier in the interval if AC drops out.
+    const float intervalAvgWatts = currentIntervalWattSeconds / sampleDurationSec;
+    const float intervalWh = currentIntervalWattSeconds / 3600.0;
     currentIntervalWattSeconds = 0.0; // Reset for next interval
 
     PowerLogEntry entry;
