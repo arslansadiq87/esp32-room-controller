@@ -11,6 +11,8 @@ The controller remains the authority for device and sensor state. Build and flas
 
 **PCB fabrication:** [Order boards from JLCPCB](https://jlcpcb.com?from=PPOAXWDGOGZXJOSA)
 
+[![JLCPCB](https://raw.githubusercontent.com/arslansadiq87/techpanda-inventory/main/PCBlogo.png)](https://jlcpcb.com?from=PPOAXWDGOGZXJOSA)
+
 ## Repository layout
 
 ```text
