@@ -13,6 +13,8 @@ The controller remains the authority for device and sensor state. Build and flas
 
 [![JLCPCB](https://raw.githubusercontent.com/arslansadiq87/techpanda-inventory/main/PCBlogo.png)](https://jlcpcb.com?from=PPOAXWDGOGZXJOSA)
 
+**JLCMC:** Quality Automation Parts, Fairly Priced. [Find your solution here](https://jlcmc.com?from=MC2607).
+
 ## Repository layout
 
 ```text
