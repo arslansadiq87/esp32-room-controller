@@ -10,8 +10,9 @@ The controller remains the authority for device and sensor state. Build and flas
 **Project video:** [Watch the room controller video on YouTube](https://youtu.be/7oDmBWbUF9s)
 
 **PCB fabrication:** [Order boards from JLCPCB](https://jlcpcb.com?from=PPOAXWDGOGZXJOSA)
-
-[![JLCPCB](https://raw.githubusercontent.com/arslansadiq87/techpanda-inventory/main/PCBlogo.png)](https://jlcpcb.com?from=PPOAXWDGOGZXJOSA)
+<p align="center">
+  <img src="https://github.com/arslansadiq87/homeautomationv1/blob/main/MCLOGO.png" alt="MCLogo logo" width="180">
+  </p>
 
 **JLCMC:** Quality Automation Parts, Fairly Priced. [Find your solution here](https://jlcmc.com?from=MC2607).
 
