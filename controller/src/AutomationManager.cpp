@@ -655,6 +655,7 @@ void AutomationManager::evaluateLighting(uint32_t now, bool presence) {
 
 String AutomationManager::toJson() const {
     JsonDocument doc;
+    doc["type"] = "automation_config";
     doc["master"] = masterEnabled;
     doc["off_delay"] = autoOffDelaySec;
     doc["preset"] = (uint8_t)currentPreset;

@@ -4,8 +4,8 @@ let reconnectTimer = null;
 
 // Fan Dimmer State Cache
 const dimmerState = {
-    1: { level: 50, state: false, isDragging: false },
-    2: { level: 50, state: false, isDragging: false }
+    1: { level: 50, state: false, isDragging: false, pending: false, sendTimer: null },
+    2: { level: 50, state: false, isDragging: false, pending: false, sendTimer: null }
 };
 
 // Relay Friendly Names & Hardware Mapping (Relays 1..6 -> GPB2..GPB7 / ULN2803A Pins 16..11)
@@ -343,6 +343,14 @@ function initRotaryDials() {
         if (!wrapper) return;
 
         let lastSendTime = 0;
+        let pendingLevel = null;
+        function sendLatest() {
+            const level = pendingLevel;
+            pendingLevel = null;
+            if (level === null) return;
+            lastSendTime = Date.now();
+            sendWsMessage({ type: 'dimmer', id, level, state: level > 0 });
+        }
 
         function handlePointerMove(e) {
             if (!dimmerState[id].isDragging) return;
@@ -379,29 +387,25 @@ function initRotaryDials() {
 
             updateDimmerUI(id, level, dimmerState[id].state);
 
-            // Throttled WebSocket update during drag (every 80ms)
-            const now = Date.now();
-            if (now - lastSendTime > 80) {
-                lastSendTime = now;
-                sendWsMessage({
-                    type: 'dimmer',
-                    id: id,
-                    level: level,
-                    state: dimmerState[id].state
-                });
+            // Keep the local arc authoritative during the gesture and coalesce network updates.
+            pendingLevel = level;
+            const wait = Math.max(0, 100 - (Date.now() - lastSendTime));
+            if (!dimmerState[id].sendTimer) {
+                dimmerState[id].sendTimer = setTimeout(() => {
+                    dimmerState[id].sendTimer = null;
+                    sendLatest();
+                }, wait);
             }
         }
 
         function handlePointerUp() {
             if (dimmerState[id].isDragging) {
                 dimmerState[id].isDragging = false;
-                // Send final confirmed state
-                sendWsMessage({
-                    type: 'dimmer',
-                    id: id,
-                    level: dimmerState[id].level,
-                    state: dimmerState[id].state
-                });
+                dimmerState[id].pending = true;
+                if (dimmerState[id].sendTimer) clearTimeout(dimmerState[id].sendTimer);
+                dimmerState[id].sendTimer = null;
+                pendingLevel = dimmerState[id].level;
+                sendLatest();
             }
         }
 
@@ -544,7 +548,7 @@ function handleIncomingMessage(msg) {
             // Update Fans / Dimmers
             if (msg.dimmers) {
                 msg.dimmers.forEach(d => {
-                    if (!dimmerState[d.id] || !dimmerState[d.id].isDragging) {
+                    if (!dimmerState[d.id] || (!dimmerState[d.id].isDragging && !dimmerState[d.id].pending)) {
                         updateDimmerUI(d.id, d.level, d.state);
                     }
                 });
@@ -627,7 +631,8 @@ function handleIncomingMessage(msg) {
             break;
 
         case 'dimmer_update':
-            if (!dimmerState[msg.id] || !dimmerState[msg.id].isDragging) {
+            if (dimmerState[msg.id]) dimmerState[msg.id].pending = false;
+            if (!dimmerState[msg.id] || (!dimmerState[msg.id].isDragging && !dimmerState[msg.id].pending)) {
                 updateDimmerUI(msg.id, msg.level, msg.state);
             }
             break;
@@ -845,6 +850,7 @@ function animateFanToLevel(id, targetLevel, onComplete) {
 // Fan Preset Pill Click with smooth dial sweep & button cross-fade
 function setFanPreset(id, level) {
     const targetLevel = Math.max(0, Math.min(100, Number(level) || 0));
+    dimmerState[id].pending = true;
     const newState = (targetLevel > 0);
 
     dimmerState[id].isDragging = false;

@@ -439,6 +439,7 @@ void AutomationSafetyManager::saveSettings() {
 
 String AutomationSafetyManager::toJson() const {
     JsonDocument doc;
+    doc["type"] = "safety_config";
     doc["t_hyst"] = config.tempHysteresis;
     doc["c_hyst"] = config.co2Hysteresis;
     doc["l_min_on"] = config.lightMinOnTimeSec;
