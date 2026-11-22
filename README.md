@@ -7,6 +7,10 @@ This repository contains two separate PlatformIO firmware projects for one room 
 
 The controller remains the authority for device and sensor state. Build and flash each project to its own board; never flash one board's firmware to the other.
 
+**Project video:** [Watch the room controller video on YouTube](https://youtu.be/7oDmBWbUF9s)
+
+**PCB fabrication:** [Order boards from JLCPCB](https://jlcpcb.com?from=PPOAXWDGOGZXJOSA)
+
 ## Repository layout
 
 ```text
