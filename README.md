@@ -1,6 +1,25 @@
-<img src="https://github.com/arslansadiq87/circuit-studio/blob/main/techpanda%20logo.png" alt="TechPanda logo" width="160">
 
-**[Open Circuit Studio](https://circuit.techpanada.com)** · **[DIY electronics projects at TechPanda Labs](https://techpandalabs.com)**
+<div align="center">
+
+  <img src="https://raw.githubusercontent.com/arslansadiq87/circuit-studio/main/techpanda%20logo.png" alt="TechPanda Logo" width="150">
+
+  <h1>Circuit Studio 3D</h1>
+
+  <p>
+    Create 3D electronics wiring diagrams, connect components,<br>
+    and generate animated wiring tutorials.
+  </p>
+
+  <p>
+    <a href="https://circuit.techpandalabs.com">
+      <img src="https://img.shields.io/badge/Launch-Circuit_Studio-2563EB?style=for-the-badge" alt="Launch Circuit Studio">
+    </a>
+    <a href="https://techpandalabs.com">
+      <img src="https://img.shields.io/badge/Explore-TechPanda_Labs-374151?style=for-the-badge" alt="Explore TechPanda Labs">
+    </a>
+  </p>
+
+</div>
 
 # ESP32 Room Controller
 
