@@ -1,3 +1,7 @@
+<img src="techpanda%20logo.png" alt="TechPanda logo" width="160">
+
+**[Open Circuit Studio](https://circuit.techpanada.com)** · **[DIY electronics projects at TechPanda Labs](https://techpandalabs.com)**
+
 # ESP32 Room Controller
 
 This repository contains two separate PlatformIO firmware projects for one room automation system:
