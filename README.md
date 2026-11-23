@@ -1,4 +1,4 @@
-<img src="techpanda%20logo.png" alt="TechPanda logo" width="160">
+<img src="https://github.com/arslansadiq87/circuit-studio/blob/main/techpanda%20logo.png" alt="TechPanda logo" width="160">
 
 **[Open Circuit Studio](https://circuit.techpanada.com)** · **[DIY electronics projects at TechPanda Labs](https://techpandalabs.com)**
 
