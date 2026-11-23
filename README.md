@@ -3,7 +3,7 @@
 
   <img src="https://raw.githubusercontent.com/arslansadiq87/circuit-studio/main/techpanda%20logo.png" alt="TechPanda Logo" width="150">
 
-  <h1>Circuit Studio 3D</h1>
+  <h1>Tech Panda Labs</h1>
 
   <p>
     Create 3D electronics wiring diagrams, connect components,<br>
